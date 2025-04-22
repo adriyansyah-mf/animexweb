@@ -9,6 +9,7 @@ import { usePathname } from "next/navigation";
 import Banner from "@/components/ui/banner";
 import HomeContent from "@/components/ui/homecontent";
 import Footer from "@/components/ui/footer";
+import { GoogleAnalytics } from '@next/third-parties/google';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -110,6 +111,7 @@ export default function RootLayout({
         <meta name="robots" content={metadata.robots} />
       </Head>
       <body className={inter.className}>
+      <GoogleAnalytics gaId="G-JSC21PRNYD" />
       <GlassmorphismNavbar
           navItems={navItems}
           onSearch={(query) => {
