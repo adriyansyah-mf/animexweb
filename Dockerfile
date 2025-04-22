@@ -20,4 +20,4 @@ RUN npm run build
 EXPOSE 80
 
 # Menentukan perintah untuk menjalankan aplikasi dalam mode produksi
-CMD ["npm", "run", "start"]
+CMD ["npm", "run", "start", "-p", "80"]  # Menambahkan port 80
