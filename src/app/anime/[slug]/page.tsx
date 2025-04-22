@@ -36,6 +36,20 @@ interface AnimeDetail {
   genres: string[];
 }
 
+interface SiteSettings {
+  site_name: string;
+  site_description: string;
+  site_keywords: string;
+  site_author: string;
+  meta_title: string;
+  meta_description: string;
+  meta_robots: string;
+  favicon_url: string | null;
+  logo_url: string | null;
+  google_analytics_id: string | null;
+  facebook_pixel_id: string | null;
+}
+
 // Function to convert title to slug format
 const convertToSlug = (text: string) => {
   return text
@@ -51,9 +65,26 @@ export default function AnimeDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentVideo, setCurrentVideo] = useState<string | null>(null);
+  const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null);
   const slug = params?.slug as string;
 
   useEffect(() => {
+    const fetchSiteSettings = async () => {
+      try {
+        const settingsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/settings`, {
+          method: 'GET',
+          headers: { accept: 'application/json' },
+        });
+
+        if (!settingsRes.ok) throw new Error("Failed to fetch site settings");
+
+        const settingsData = await settingsRes.json();
+        setSiteSettings(settingsData);
+      } catch (error) {
+        console.error("Error fetching site settings:", error);
+      }
+    };
+
     const fetchAnimeDetail = async () => {
       try {
         setLoading(true);
@@ -94,6 +125,7 @@ export default function AnimeDetailPage() {
     };
 
     if (slug) {
+      fetchSiteSettings();
       fetchAnimeDetail();
     }
   }, [slug]);
@@ -108,7 +140,7 @@ export default function AnimeDetailPage() {
     setCurrentVideo(null);
   };
 
-  if (loading) {
+  if (loading || !siteSettings) {
     return <LoadingSkeleton />;
   }
 
@@ -129,30 +161,34 @@ export default function AnimeDetailPage() {
     return url.startsWith("http://") || url.startsWith("https://");
   };
 
+  const animeTitleForMeta = `${anime.title} - ${siteSettings.site_name} Sub Indo Gratis`;
+  const metaDescription = `${siteSettings.site_name}, ${anime.title} streaming anime gratis sub indo`;
+
   return (
     <>
       {/* SEO Metadata */}
       <Head>
-        <title>{anime.title} - Anime Detail</title>
-        <meta name="description" content={anime.sinopsis} />
-        <meta name="keywords" content={anime.genres.join(", ")} />
-        <meta property="og:title" content={anime.title} />
-        <meta property="og:description" content={anime.sinopsis} />
+        <title>{animeTitleForMeta}</title>
+        <meta name="description" content={metaDescription} />
+        <meta name="keywords" content={siteSettings.site_keywords} />
+        <meta property="og:title" content={animeTitleForMeta} />
+        <meta property="og:description" content={metaDescription} />
         <meta property="og:image" content={anime.banner} />
         <meta property="og:url" content={window.location.href} />
-        <meta name="twitter:title" content={anime.title} />
-        <meta name="twitter:description" content={anime.sinopsis} />
+        <meta name="twitter:title" content={animeTitleForMeta} />
+        <meta name="twitter:description" content={metaDescription} />
         <meta name="twitter:image" content={anime.banner} />
         <meta name="twitter:card" content="summary_large_image" />
       </Head>
-
+      <title>{animeTitleForMeta}</title>
+      
       <div className="container mx-auto py-8 px-4 md:px-6 mt-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Left Column - Poster and Info */}
           <div className="md:col-span-1">
             <div className="relative rounded-lg overflow-hidden h-96 md:h-auto w-full mb-6 shadow-lg hover:scale-105 transition-all duration-300 mt-40">
               {isExternalImage(anime.banner) ? (
-                <img src={anime.banner} alt={anime.title} className="object-cover w-full h-full" />
+                <img src={anime.banner} alt={anime.title} className="object-cover w-full h-full"/>
               ) : (
                 <Image 
                   src={anime.banner} 
