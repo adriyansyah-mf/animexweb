@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  nextjs:
+    build: .
+    ports:
+      - "80:80"  # Menyambungkan port 80 di container ke port 80 di host
+    environment:
+      - NODE_ENV=production  # Menentukan environment sebagai produksi
+    networks:
+      - nextjs-network
+    restart: always  # Restart container jika terjadi kegagalan
+
+networks:
+  nextjs-network:
+    driver: bridge
