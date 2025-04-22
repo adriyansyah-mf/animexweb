@@ -4,12 +4,12 @@ services:
   nextjs:
     build: .
     ports:
-      - "80:80"  # Menyambungkan port 80 di container ke port 80 di host
+      - "80:3000"  # External:Internal
     environment:
-      - NODE_ENV=production  # Menentukan environment sebagai produksi
+      - NODE_ENV=production
     networks:
       - nextjs-network
-    restart: always  # Restart container jika terjadi kegagalan
+    restart: unless-stopped
 
 networks:
   nextjs-network:

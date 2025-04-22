@@ -1,23 +1,20 @@
-# Menggunakan image Node.js sebagai base image
 FROM node:18-alpine
 
-# Menentukan direktori kerja di dalam container
 WORKDIR /app
 
-# Menyalin package.json dan package-lock.json terlebih dahulu untuk menginstal dependensi
 COPY package.json package-lock.json ./
-
-# Menginstal dependensi proyek
 RUN npm install
 
-# Menyalin seluruh kode sumber ke dalam container
 COPY . .
 
-# Menjalankan build aplikasi Next.js
 RUN npm run build
 
-# Mengexpose port 80 yang akan digunakan oleh aplikasi
-EXPOSE 80
+# Health check (menggunakan port internal 3000)
+RUN apk add --no-cache curl
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:3000 || exit 1
 
-# Menentukan perintah untuk menjalankan aplikasi dalam mode produksi
-CMD ["npm", "run", "start", "--", "-p", "80"]  # Menambahkan port 80 dengan format yang benar
+# Tetap gunakan port default Next.js
+EXPOSE 3000
+
+CMD ["npm", "start"]
