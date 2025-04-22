@@ -49,7 +49,7 @@ const GlassmorphismNavbar = ({ navItems, onSearch }: NavbarProps) => {
         <div className="bg-white/10 dark:bg-black/20 rounded-lg px-6 py-3 shadow-lg border border-white/20 dark:border-white/10 backdrop-filter backdrop-blur-lg">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-8">
-            <Link
+              <Link
                 href="/"
                 className="text-black dark:text-white text-2xl font-semibold hover:underline"
               >
@@ -98,9 +98,11 @@ const GlassmorphismNavbar = ({ navItems, onSearch }: NavbarProps) => {
                 className="block w-full p-2 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-white/30 dark:bg-black/30 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white focus:outline-none"
                 placeholder="Search..."
                 value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  onSearch(e.target.value);
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    onSearch(searchQuery);
+                  }
                 }}
                 onFocus={() => setIsSearchFocused(true)}
                 onBlur={() => setIsSearchFocused(false)}

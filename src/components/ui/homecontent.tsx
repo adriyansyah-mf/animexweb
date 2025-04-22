@@ -113,7 +113,7 @@ const HomeContent = () => {
               alt={anime.title}
               className="w-full h-60 object-cover rounded-lg mb-3"
             />
-            <Link href={`/anime/${convertToSlug(anime.title)}`}>
+            <Link href={`/anime/${convertToSlug(anime.title)}-${anime.id}`}>
               <h3 className="text-lg font-bold line-clamp-2 cursor-pointer">
                 {anime.title}
               </h3>

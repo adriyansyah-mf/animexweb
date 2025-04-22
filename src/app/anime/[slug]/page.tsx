@@ -9,8 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Clock, FilmIcon, User } from "lucide-react";
-import Link from "next/link";
-import Head from "next/head"; // Import Head from next/head
+import Head from "next/head";
 
 // Type definitions
 interface Episode {
@@ -50,30 +49,24 @@ interface SiteSettings {
   facebook_pixel_id: string | null;
 }
 
-// Function to convert title to slug format
-const convertToSlug = (text: string) => {
-  return text
-    .toLowerCase()
-    .replace(/[^\w ]+/g, "")
-    .replace(/ +/g, "-");
-};
-
 export default function AnimeDetailPage() {
   const params = useParams();
+  const slug = params?.slug as string;
+  const id = slug?.split("-").pop(); // Ambil ID dari akhir slug
+
   const [anime, setAnime] = useState<AnimeDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentVideo, setCurrentVideo] = useState<string | null>(null);
   const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null);
-  const slug = params?.slug as string;
 
   useEffect(() => {
     const fetchSiteSettings = async () => {
       try {
         const settingsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/settings`, {
-          method: 'GET',
-          headers: { accept: 'application/json' },
+          method: "GET",
+          headers: { accept: "application/json" },
         });
 
         if (!settingsRes.ok) throw new Error("Failed to fetch site settings");
@@ -86,49 +79,28 @@ export default function AnimeDetailPage() {
     };
 
     const fetchAnimeDetail = async () => {
+      if (!id) return;
+
       try {
-        setLoading(true);
         const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-        
-        // First, get the ID from slug by fetching list and finding matching anime
-        const listRes = await fetch(`${apiUrl}/user/list-anime?page=1&per_page=100`, {
-          headers: { accept: "application/json" },
-        });
-
-        if (!listRes.ok) throw new Error("Failed to fetch anime list");
-        
-        const listData = await listRes.json();
-        // Find the anime with matching title (converted to slug)
-        const animeData = listData.data.find((item: any) => 
-          convertToSlug(item.title) === slug
-        );
-        
-        if (!animeData) {
-          throw new Error("Anime not found");
-        }
-
-        // Fetch the anime details using the ID
-        const detailRes = await fetch(`${apiUrl}/user/anime/${animeData.id}`, {
+        const detailRes = await fetch(`${apiUrl}/user/anime/${id}`, {
           headers: { accept: "application/json" },
         });
 
         if (!detailRes.ok) throw new Error("Failed to fetch anime details");
-        
+
         const animeDetail = await detailRes.json();
         setAnime(animeDetail);
-      } catch (error) {
-        console.error("Error fetching anime:", error);
-        setError(error instanceof Error ? error.message : "Failed to load anime");
+      } catch (err) {
+        setError("Gagal mengambil detail anime.");
       } finally {
         setLoading(false);
       }
     };
 
-    if (slug) {
-      fetchSiteSettings();
-      fetchAnimeDetail();
-    }
-  }, [slug]);
+    fetchSiteSettings();
+    if (id) fetchAnimeDetail();
+  }, [id]);
 
   const handleOpenModal = (videoUrl: string) => {
     setCurrentVideo(videoUrl);
@@ -140,9 +112,14 @@ export default function AnimeDetailPage() {
     setCurrentVideo(null);
   };
 
-  if (loading || !siteSettings) {
-    return <LoadingSkeleton />;
-  }
+  const isExternalImage = (url: string) => {
+    return url.startsWith("http://") || url.startsWith("https://");
+  };
+
+  const animeTitleForMeta = anime ? `${anime.title} - ${siteSettings?.site_name} Sub Indo Gratis` : "";
+  const metaDescription = anime ? `${siteSettings?.site_name}, ${anime.title} streaming anime gratis sub indo` : "";
+
+  if (loading || !siteSettings) return <LoadingSkeleton />;
 
   if (error || !anime) {
     return (
@@ -156,14 +133,6 @@ export default function AnimeDetailPage() {
     );
   }
 
-  // Check if image source is external and use a regular <img> tag for external URLs
-  const isExternalImage = (url: string) => {
-    return url.startsWith("http://") || url.startsWith("https://");
-  };
-
-  const animeTitleForMeta = `${anime.title} - ${siteSettings.site_name} Sub Indo Gratis`;
-  const metaDescription = `${siteSettings.site_name}, ${anime.title} streaming anime gratis sub indo`;
-
   return (
     <>
       {/* SEO Metadata */}
@@ -174,58 +143,35 @@ export default function AnimeDetailPage() {
         <meta property="og:title" content={animeTitleForMeta} />
         <meta property="og:description" content={metaDescription} />
         <meta property="og:image" content={anime.banner} />
-        <meta property="og:url" content={window.location.href} />
         <meta name="twitter:title" content={animeTitleForMeta} />
         <meta name="twitter:description" content={metaDescription} />
         <meta name="twitter:image" content={anime.banner} />
         <meta name="twitter:card" content="summary_large_image" />
       </Head>
-      <title>{animeTitleForMeta}</title>
-      
+
       <div className="container mx-auto py-8 px-4 md:px-6 mt-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Left Column - Poster and Info */}
+          {/* Left Column */}
           <div className="md:col-span-1">
             <div className="relative rounded-lg overflow-hidden h-96 md:h-auto w-full mb-6 shadow-lg hover:scale-105 transition-all duration-300 mt-40">
               {isExternalImage(anime.banner) ? (
-                <img src={anime.banner} alt={anime.title} className="object-cover w-full h-full"/>
+                <img src={anime.banner} alt={anime.title} className="object-cover w-full h-full" />
               ) : (
-                <Image 
-                  src={anime.banner} 
-                  alt={anime.title}
-                  fill
-                  className="object-cover"
-                  priority
-                />
+                <Image src={anime.banner} alt={anime.title} fill className="object-cover" priority />
               )}
             </div>
-            
+
             <div className="space-y-4 bg-black/40 p-4 rounded-lg backdrop-blur-lg">
-              <div className="flex items-center gap-2">
-                <FilmIcon className="h-5 w-5 text-muted-foreground" />
-                <span className="text-sm text-white">{anime.type} • {anime.status}</span>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-muted-foreground" />
-                <span className="text-sm text-white">{anime.released_year} • {anime.season}</span>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <User className="h-5 w-5 text-muted-foreground" />
-                <span className="text-sm text-white">Posted by {anime.posted_by}</span>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-muted-foreground" />
-                <span className="text-sm text-white">Updated on {anime.updated_on}</span>
-              </div>
-              
+              <AnimeInfoRow icon={<FilmIcon />} text={`${anime.type} • ${anime.status}`} />
+              <AnimeInfoRow icon={<Calendar />} text={`${anime.released_year} • ${anime.season}`} />
+              <AnimeInfoRow icon={<User />} text={`Posted by ${anime.posted_by}`} />
+              <AnimeInfoRow icon={<Clock />} text={`Updated on ${anime.updated_on}`} />
+
               <div className="pt-2">
                 <p className="text-sm text-white font-medium mb-2">Studio</p>
                 <p className="text-sm text-white">{anime.studio}</p>
               </div>
-              
+
               <div className="pt-2">
                 <p className="text-sm text-white font-medium mb-2">Genres</p>
                 <div className="flex flex-wrap gap-2">
@@ -238,16 +184,16 @@ export default function AnimeDetailPage() {
               </div>
             </div>
           </div>
-          
-          {/* Right Column - Details and Episodes */}
+
+          {/* Right Column */}
           <div className="md:col-span-2">
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-4 mt-40">{anime.title}</h1>
-            
+
             <div className="mb-6 mt-4">
               <h2 className="text-xl font-semibold text-white mb-2">Synopsis</h2>
               <p className="text-gray-300">{anime.sinopsis}</p>
             </div>
-            
+
             <Tabs defaultValue="episodes" className="w-full mt-4">
               <TabsList className="mb-4">
                 <TabsTrigger value="episodes" className="bg-black/40 hover:bg-black/50 transition-colors">
@@ -257,23 +203,18 @@ export default function AnimeDetailPage() {
                   Related Anime
                 </TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="episodes" className="space-y-4">
                 <h2 className="text-xl font-semibold text-white">Episodes List</h2>
                 <ScrollArea className="h-[500px] pr-4">
                   <div className="space-y-3">
                     {anime.episodes.map((episode) => (
-                      <EpisodeCard 
-                        key={episode.Number} 
-                        episode={episode} 
-                        animeTitle={anime.title} 
-                        onOpenModal={handleOpenModal} 
-                      />
+                      <EpisodeCard key={episode.Number} episode={episode} onOpenModal={handleOpenModal} />
                     ))}
                   </div>
                 </ScrollArea>
               </TabsContent>
-              
+
               <TabsContent value="related">
                 <div className="bg-black/40 p-6 rounded-lg backdrop-blur-lg">
                   <p className="text-center text-gray-400">Related anime will be available soon.</p>
@@ -287,19 +228,10 @@ export default function AnimeDetailPage() {
         {isModalOpen && currentVideo && (
           <div className="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50">
             <div className="relative w-full h-full">
-              <button
-                className="absolute top-0 right-0 p-4 text-white"
-                onClick={handleCloseModal}
-              >
+              <button className="absolute top-0 right-0 p-4 text-white" onClick={handleCloseModal}>
                 X
               </button>
-              <iframe
-                src={currentVideo}
-                width="100%"
-                height="100%"
-                frameBorder="0"
-                allowFullScreen
-              ></iframe>
+              <iframe src={currentVideo} width="100%" height="100%" frameBorder="0" allowFullScreen />
             </div>
           </div>
         )}
@@ -308,8 +240,17 @@ export default function AnimeDetailPage() {
   );
 }
 
-// Episode Card Component
-function EpisodeCard({ episode, animeTitle, onOpenModal }: { episode: Episode, animeTitle: string, onOpenModal: (url: string) => void }) {
+// Reusable Component
+function AnimeInfoRow({ icon, text }: { icon: React.ReactNode; text: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      <div className="text-muted-foreground">{icon}</div>
+      <span className="text-sm text-white">{text}</span>
+    </div>
+  );
+}
+
+function EpisodeCard({ episode, onOpenModal }: { episode: Episode; onOpenModal: (url: string) => void }) {
   return (
     <div className="bg-black/40 p-4 rounded-lg backdrop-blur-lg hover:bg-black/50 transition-colors">
       <div className="flex justify-between items-center">
@@ -317,12 +258,9 @@ function EpisodeCard({ episode, animeTitle, onOpenModal }: { episode: Episode, a
         <span className="text-sm text-gray-400">{episode.Date}</span>
       </div>
       <div className="mt-4 flex gap-3">
-        {/* Watch Episode */}
         <Button variant="outline" size="sm" onClick={() => onOpenModal(episode.Link)}>
           Watch Episode
         </Button>
-
-        {/* Stream Episode */}
         <Button variant="secondary" size="sm" onClick={() => onOpenModal(episode.Link)}>
           Stream Episode
         </Button>
@@ -331,7 +269,6 @@ function EpisodeCard({ episode, animeTitle, onOpenModal }: { episode: Episode, a
   );
 }
 
-// Loading Skeleton
 function LoadingSkeleton() {
   return (
     <div className="container mx-auto py-8 px-4 md:px-6 mt-10">

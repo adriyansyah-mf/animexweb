@@ -39,7 +39,7 @@ export async function GET() {
   const animeList = data.data;
 
   const animeUrls = animeList.map((anime: any) => {
-    const slug = toSlug(anime.title || "unknown");
+    const slug = `${toSlug(anime.title || "unknown")}-${anime.id}`; // <-- Tambah ID
     const safeLoc = `${baseUrl}/anime/${slug}`;
     return `
       <url>
