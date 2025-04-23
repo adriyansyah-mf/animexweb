@@ -14,8 +14,7 @@ import { GoogleAnalytics } from '@next/third-parties/google';
 const inter = Inter({ subsets: ["latin"] });
 
 const navItems = [
-  { label: "List Anime", href: "/features" },
-  { label: "Genre", href: "/genre" },
+  { label: "List Anime", href: "/anime/lists" },
 ];
 
 export default function RootLayout({
@@ -68,22 +67,27 @@ export default function RootLayout({
     const fetchAnimeBannerData = async () => {
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-
-        const listRes = await fetch(`${apiUrl}/user/list-anime?page=1&per_page=1&status=Ongoing`, {
+        // Fetch a larger list of ongoing anime to choose from randomly
+        const listRes = await fetch(`${apiUrl}/user/list-anime?page=1&per_page=10&status=Ongoing`, {
           headers: { accept: "application/json" },
         });
-
         if (!listRes.ok) throw new Error("Failed to fetch anime list");
         const listData = await listRes.json();
-        const animeId = listData?.data?.[0]?.id;
+        
+        // Check if we have anime data
+        if (!listData?.data || listData.data.length === 0) return;
+        
+        // Select a random anime from the list
+        const randomIndex = Math.floor(Math.random() * listData.data.length);
+        const animeId = listData.data[randomIndex].id;
+        
         if (!animeId) return;
-
+        
+        // Fetch details for the randomly selected anime
         const detailRes = await fetch(`${apiUrl}/user/anime/${animeId}`, {
           headers: { accept: "application/json" },
         });
-
         if (!detailRes.ok) throw new Error("Failed to fetch anime detail");
-
         const animeDetail = await detailRes.json();
         setAnime(animeDetail);
       } catch (error) {
@@ -111,23 +115,28 @@ export default function RootLayout({
         <meta name="robots" content={metadata.robots} />
       </Head>
       <body className={inter.className}>
-      <GoogleAnalytics gaId="G-JSC21PRNYD" />
-      <GlassmorphismNavbar
-          navItems={navItems}
-          onSearch={(query) => {
-            console.log("Search query:", query);
-            // Atau kamu bisa taruh logic pencarianmu di sini
-          }}
-        />
+        <GoogleAnalytics gaId="G-JSC21PRNYD" />
+        <div className="flex flex-col min-h-screen"> {/* Flex layout here */}
+          <GlassmorphismNavbar
+            navItems={navItems}
+            onSearch={(query) => {
+              console.log("Search query:", query);
+            }}
+          />
 
-        {pathname === "/" && anime && <Banner anime={anime} />}
-        {pathname === "/" && hasScrolled && <HomeContent />}
+          <div className="flex-grow pb-20"> {/* Flex-grow ensures the content fills available space */}
+            {pathname === "/" && anime && <Banner anime={anime} />}
+            {pathname === "/" && hasScrolled && <HomeContent />}
+            <ThemeProvider defaultTheme="dark" storageKey="dark">
+              {children}
+            </ThemeProvider>
+          </div>
 
-        <ThemeProvider defaultTheme="dark" storageKey="dark">
-          {children}
-        </ThemeProvider>
-
-        <Footer siteName={metadata.siteName} />
+          {/* Fixed footer */}
+          <div className="fixed bottom-0 left-0 w-full bg-black text-white py-4">
+            <Footer siteName={metadata.siteName} />
+          </div>
+        </div>
       </body>
     </html>
   );

@@ -12,6 +12,9 @@ const fadeInUp = {
 
 const HomeContent = () => {
   const [animes, setAnimes] = useState<any[]>([]);
+  const [newestAnimes, setNewestAnimes] = useState<any[]>([]);
+  const [ongoingAnimes, setOngoingAnimes] = useState<any[]>([]);
+  const [completedAnimes, setCompletedAnimes] = useState<any[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -55,6 +58,63 @@ const HomeContent = () => {
     }
   };
 
+  const fetchNewestAnimes = async () => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const response = await fetch(
+        `${apiUrl}/user/list-anime?page=1&per_page=5`,
+        {
+          headers: { accept: "application/json" },
+        }
+      );
+      if (!response.ok) throw new Error("Failed to fetch newest anime");
+      const data = await response.json();
+      setNewestAnimes(data.data || []);
+    } catch (error) {
+      console.error("Error fetching newest anime:", error);
+    }
+  };
+
+  const fetchOngoingAnimes = async () => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const response = await fetch(
+        `${apiUrl}/user/list-anime?page=1&per_page=5&status=Ongoing`,
+        {
+          headers: { accept: "application/json" },
+        }
+      );
+      if (!response.ok) throw new Error("Failed to fetch ongoing anime");
+      const data = await response.json();
+      setOngoingAnimes(data.data || []);
+    } catch (error) {
+      console.error("Error fetching ongoing anime:", error);
+    }
+  };
+
+  const fetchCompletedAnimes = async () => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const response = await fetch(
+        `${apiUrl}/user/list-anime?page=1&per_page=5&status=Completed`,
+        {
+          headers: { accept: "application/json" },
+        }
+      );
+      if (!response.ok) throw new Error("Failed to fetch completed anime");
+      const data = await response.json();
+      setCompletedAnimes(data.data || []);
+    } catch (error) {
+      console.error("Error fetching completed anime:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchNewestAnimes();
+    fetchOngoingAnimes();
+    fetchCompletedAnimes();
+  }, []);
+
   useEffect(() => {
     setPage(1);
     fetchAnimes(1, search, selectedGenre);
@@ -91,56 +151,113 @@ const HomeContent = () => {
     topRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const renderAnimeSection = (title: string, animes: any[]) => {
+    if (animes.length === 0) return null;
+
+    return (
+      <div className="mb-12">
+        <h2 className="text-2xl font-bold text-white mb-6">{title}</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+          {animes.map((anime, index) => (
+            <motion.div
+              key={`${title}-${anime.id}-${index}`}
+              className="bg-white/10 backdrop-blur-md rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow duration-300 text-white"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.2 }}
+              variants={fadeInUp}
+              transition={{ duration: 0.4, delay: index * 0.05 }}
+            >
+              <img
+                src={anime.banner}
+                alt={anime.title}
+                className="w-full h-60 object-cover rounded-lg mb-3"
+              />
+              <Link href={`/anime/${convertToSlug(anime.title)}-${anime.id}`}>
+                <h3 className="text-lg font-bold line-clamp-2 cursor-pointer">
+                  {anime.title}
+                </h3>
+              </Link>
+              <p className="text-sm text-gray-400">{anime.released_year}</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {anime.genres.map((genre: string) => (
+                  <button
+                    key={`${anime.id}-${genre}`}
+                    className={`text-xs px-2 py-1 rounded-full border ${
+                      selectedGenre === genre
+                        ? "bg-[#2F88FF] text-white border-[#2F88FF]"
+                        : "bg-[#2F88FF]/20 text-white border-[#2F88FF] hover:bg-[#2F88FF]/40"
+                    }`}
+                    onClick={() => handleGenreClick(genre)}
+                  >
+                    {genre}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <>
       <GlassmorphismNavbar navItems={[]} onSearch={(q) => setSearch(q)} />
-      <div
-        ref={topRef}
-        className="container mx-auto py-10 px-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6"
-      >
-        {animes.map((anime, index) => (
-          <motion.div
-            key={`${anime.id}-${index}`}
-            className="bg-white/10 backdrop-blur-md rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow duration-300 text-white"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.2 }}
-            variants={fadeInUp}
-            transition={{ duration: 0.4, delay: index * 0.05 }}
-          >
-            <img
-              src={anime.banner}
-              alt={anime.title}
-              className="w-full h-60 object-cover rounded-lg mb-3"
-            />
-            <Link href={`/anime/${convertToSlug(anime.title)}-${anime.id}`}>
-              <h3 className="text-lg font-bold line-clamp-2 cursor-pointer">
-                {anime.title}
-              </h3>
-            </Link>
-            <p className="text-sm text-gray-400">{anime.released_year}</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {anime.genres.map((genre: string) => (
-                <button
-                  key={`${anime.id}-${genre}`}
-                  className={`text-xs px-2 py-1 rounded-full border ${
-                    selectedGenre === genre
-                      ? "bg-[#2F88FF] text-white border-[#2F88FF]"
-                      : "bg-[#2F88FF]/20 text-white border-[#2F88FF] hover:bg-[#2F88FF]/40"
-                  }`}
-                  onClick={() => handleGenreClick(genre)}
-                >
-                  {genre}
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        ))}
+      <div ref={topRef} className="container mx-auto py-10 px-4">
+        {renderAnimeSection("Newest Anime", newestAnimes)}
+        {renderAnimeSection("Ongoing Anime", ongoingAnimes)}
+        {renderAnimeSection("Completed Anime", completedAnimes)}
+
+        <h2 className="text-2xl font-bold text-white mb-6">
+          {selectedGenre ? `${selectedGenre} Anime` : "All Anime"}
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+          {animes.map((anime, index) => (
+            <motion.div
+              key={`${anime.id}-${index}`}
+              className="bg-white/10 backdrop-blur-md rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow duration-300 text-white"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.2 }}
+              variants={fadeInUp}
+              transition={{ duration: 0.4, delay: index * 0.05 }}
+            >
+              <img
+                src={anime.banner}
+                alt={anime.title}
+                className="w-full h-60 object-cover rounded-lg mb-3"
+              />
+              <Link href={`/anime/${convertToSlug(anime.title)}-${anime.id}`}>
+                <h3 className="text-lg font-bold line-clamp-2 cursor-pointer">
+                  {anime.title}
+                </h3>
+              </Link>
+              <p className="text-sm text-gray-400">{anime.released_year}</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {anime.genres.map((genre: string) => (
+                  <button
+                    key={`${anime.id}-${genre}`}
+                    className={`text-xs px-2 py-1 rounded-full border ${
+                      selectedGenre === genre
+                        ? "bg-[#2F88FF] text-white border-[#2F88FF]"
+                        : "bg-[#2F88FF]/20 text-white border-[#2F88FF] hover:bg-[#2F88FF]/40"
+                    }`}
+                    onClick={() => handleGenreClick(genre)}
+                  >
+                    {genre}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          ))}
+        </div>
 
         <div ref={loaderRef} className="col-span-full flex justify-center mt-10">
           {loading && (
-            <div className="text-gray-400 text-sm animate-pulse">
-              Loading more anime...
+            <div className="flex flex-col items-center text-gray-400 text-sm animate-pulse">
+              <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500 mb-3"></div>
+              <span>Loading more anime...</span>
             </div>
           )}
           {!hasMore && (
@@ -155,9 +272,9 @@ const HomeContent = () => {
             setSelectedGenre("");
             topRef.current?.scrollIntoView({ behavior: "smooth" });
           }}
-          className="fixed bottom-6 right-6 bg-red-500 text-white px-4 py-2 rounded-full shadow-lg hover:bg-red-600 transition"
+          className="fixed top-20 right-4 bg-red-500 text-white px-3 py-1 rounded-full shadow-lg hover:bg-red-600 transition text-xs z-50"
         >
-          Reset Genre
+          ✕ {selectedGenre}
         </button>
       )}
     </>
