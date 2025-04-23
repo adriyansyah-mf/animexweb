@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Clock, FilmIcon, User, Home } from "lucide-react";
+import { Calendar, Clock, FilmIcon, User, Home, Share2, Download } from "lucide-react";
 import Head from "next/head";
 
 // Type definitions
@@ -53,7 +53,7 @@ interface SiteSettings {
 export default function AnimeDetailPage() {
   const params = useParams();
   const slug = params?.slug as string;
-  const id = slug?.split("-").pop(); // Ambil ID dari akhir slug
+  const id = slug?.split("-").pop(); // Get ID from end of slug
 
   const [anime, setAnime] = useState<AnimeDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -62,8 +62,26 @@ export default function AnimeDetailPage() {
   const [currentVideo, setCurrentVideo] = useState<string | null>(null);
   const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null);
   const [canonicalUrl, setCanonicalUrl] = useState("");
+  const [browserLanguage, setBrowserLanguage] = useState("id-ID");
+  const [isIndonesia, setIsIndonesia] = useState(true);
 
   useEffect(() => {
+    // Detect language and region for targeted SEO
+    if (typeof navigator !== 'undefined') {
+      setBrowserLanguage(navigator.language || "id-ID");
+      
+      // Try to detect if user is from Indonesia (simple approach)
+      fetch('https://ipapi.co/json/')
+        .then(res => res.json())
+        .then(data => {
+          setIsIndonesia(data.country_code === 'ID');
+        })
+        .catch(() => {
+          // Default to assuming Indonesian audience if detection fails
+          setIsIndonesia(true);
+        });
+    }
+
     // Set canonical URL to prevent duplicate content issues
     setCanonicalUrl(`${window.location.origin}${window.location.pathname}`);
     
@@ -96,6 +114,22 @@ export default function AnimeDetailPage() {
 
         const animeDetail = await detailRes.json();
         setAnime(animeDetail);
+        
+        // Preload critical resources for faster loading (important for Indonesian users with variable connection speeds)
+        if (animeDetail.banner) {
+          // Create an image element for preloading
+          const preloadImg = document.createElement('img');
+          preloadImg.src = animeDetail.banner;
+          // Optional: prevent the image from being displayed
+          preloadImg.style.display = 'none';
+          // Optional: remove the element after load to avoid memory issues
+          preloadImg.onload = () => {
+            if (preloadImg.parentNode) {
+              preloadImg.parentNode.removeChild(preloadImg);
+            }
+          };
+          document.body.appendChild(preloadImg);
+        }
       } catch (err) {
         setError("Gagal mengambil detail anime.");
       } finally {
@@ -121,17 +155,41 @@ export default function AnimeDetailPage() {
     return url.startsWith("http://") || url.startsWith("https://");
   };
 
-  // Improved title with better keyword placement
+  // Share content function optimized for Indonesian platforms
+  const handleShare = () => {
+    if (navigator.share && anime) {
+      navigator.share({
+        title: `Nonton ${anime.title} di ${siteSettings?.site_name}`,
+        text: `Tonton ${anime.title} (${anime.released_year}) ${anime.type} secara gratis dengan kualitas terbaik!`,
+        url: canonicalUrl,
+      }).catch(console.error);
+    } else {
+      // Fallback for browsers that don't support Web Share API
+      const shareText = anime ? 
+        `Tonton ${anime.title} (${anime.released_year}) ${anime.type} secara gratis dengan kualitas terbaik! ${canonicalUrl}` : 
+        canonicalUrl;
+      
+      // WhatsApp is extremely popular in Indonesia
+      window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
+    }
+  };
+
+  // Improved title with Indonesian-specific keyword placement
   const animeTitleForMeta = anime ? 
-    `${anime.title} (${anime.released_year}) ${anime.type} ${anime.status} - ${siteSettings?.site_name}` : 
+    `Nonton ${anime.title} (${anime.released_year}) ${anime.type} Sub Indo ${anime.status} - ${siteSettings?.site_name}` : 
     siteSettings?.meta_title || "";
     
-  // Enhanced meta description with more targeted keywords and clear CTA
+  // Enhanced meta description with Indonesian keywords and improved CTA for local audience
   const metaDescription = anime ? 
-    `Watch ${anime.title} (${anime.released_year}) ${anime.type} with ${anime.episodes.length} episodes. ${anime.status} anime from ${anime.studio}. Stream ${anime.genres.join(", ")} anime online for free with HD quality and fast loading at ${siteSettings?.site_name}.` : 
+    `Streaming ${anime.title} Subtitle Indonesia (${anime.released_year}) ${anime.type} dengan ${anime.episodes.length} episode. Anime ${anime.status} dari ${anime.studio}. Nonton anime ${anime.genres.join(", ")} online gratis dengan kualitas HD dan server cepat hanya di ${siteSettings?.site_name}.` : 
     siteSettings?.meta_description || "";
 
-  // Generate JSON-LD structured data for the anime
+  // Enhanced keywords for Indonesian audience  
+  const enhancedKeywords = anime ? 
+    `${anime.title}, ${anime.title} sub indo, nonton ${anime.title}, streaming ${anime.title}, download ${anime.title}, anime ${anime.genres.join(", ")}, ${anime.type} subtitle indonesia, ${anime.status}, ${anime.studio}, anime indonesia, streaming anime, nonton anime online` : 
+    "";
+
+  // Generate localized JSON-LD structured data for the anime
   const generateJsonLd = () => {
     if (!anime || !siteSettings) return "";
 
@@ -139,9 +197,16 @@ export default function AnimeDetailPage() {
       "@context": "https://schema.org",
       "@type": "TVSeries",
       "name": anime.title,
+      "alternateName": `${anime.title} Sub Indo`,
       "description": anime.sinopsis,
       "image": anime.banner,
       "genre": anime.genres,
+      "inLanguage": ["ja", "id"],
+      "subtitleLanguage": ["id"],
+      "countryOfOrigin": {
+        "@type": "Country",
+        "name": "Japan"
+      },
       "productionCompany": {
         "@type": "Organization",
         "name": anime.studio
@@ -164,7 +229,81 @@ export default function AnimeDetailPage() {
         "@type": "Organization",
         "name": siteSettings.site_name,
         "url": window.location.origin
+      },
+      "potentialAction": {
+        "@type": "WatchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": `${canonicalUrl}`
+        }
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "IDR",
+        "availability": "https://schema.org/InStock"
       }
+    };
+
+    return JSON.stringify(jsonLd);
+  };
+
+  // Generate WebSite structured data
+  const generateWebsiteJsonLd = () => {
+    if (!siteSettings) return "";
+
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": siteSettings.site_name,
+      "description": siteSettings.site_description,
+      "url": window.location.origin,
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": `${window.location.origin}/search?q={search_term_string}`,
+        "query-input": "required name=search_term_string"
+      },
+      "inLanguage": ["id", "en"],
+      "audience": {
+        "@type": "Audience",
+        "audienceType": "Anime Fans",
+        "geographicArea": {
+          "@type": "Country",
+          "name": "Indonesia"
+        }
+      }
+    };
+
+    return JSON.stringify(jsonLd);
+  };
+
+  // Generate BreadcrumbList structured data
+  const generateBreadcrumbJsonLd = () => {
+    if (!anime) return "";
+
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Beranda",
+          "item": window.location.origin
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Anime",
+          "item": `${window.location.origin}/anime`
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": anime.title,
+          "item": canonicalUrl
+        }
+      ]
     };
 
     return JSON.stringify(jsonLd);
@@ -176,9 +315,9 @@ export default function AnimeDetailPage() {
     return (
       <div className="container mx-auto p-6 text-center mt-4">
         <h1 className="text-2xl font-bold mb-4">Error</h1>
-        <p>{error || "Failed to load anime details"}</p>
+        <p>{error || "Gagal memuat detail anime"}</p>
         <Button className="mt-4" onClick={() => window.history.back()}>
-          Go Back
+          Kembali
         </Button>
       </div>
     );
@@ -186,20 +325,26 @@ export default function AnimeDetailPage() {
 
   return (
     <>
-      {/* Enhanced SEO Metadata */}
+      {/* Enhanced SEO Metadata for Indonesian Audience */}
       <Head>
         <title>{animeTitleForMeta}</title>
         <meta name="description" content={metaDescription} />
-        <meta name="keywords" content={`${anime.title}, ${anime.genres.join(", ")}, ${anime.type}, ${anime.status}, ${anime.studio}, ${siteSettings.site_keywords}`} />
+        <meta name="keywords" content={enhancedKeywords} />
         <link rel="canonical" href={canonicalUrl} />
         
-        {/* Open Graph / Facebook */}
+        {/* Language and Region Tags */}
+        <meta httpEquiv="content-language" content="id-ID" />
+        <link rel="alternate" href={canonicalUrl} hrefLang="id-ID" />
+        <link rel="alternate" href={canonicalUrl} hrefLang="x-default" />
+        
+        {/* Open Graph / Facebook - Popular in Indonesia */}
         <meta property="og:type" content="video.tv_show" />
         <meta property="og:title" content={animeTitleForMeta} />
         <meta property="og:description" content={metaDescription} />
         <meta property="og:image" content={anime.banner} />
         <meta property="og:url" content={canonicalUrl} />
         <meta property="og:site_name" content={siteSettings.site_name} />
+        <meta property="og:locale" content="id_ID" />
         
         {/* Twitter */}
         <meta name="twitter:title" content={animeTitleForMeta} />
@@ -209,24 +354,31 @@ export default function AnimeDetailPage() {
         <meta name="twitter:site" content="@yoursitename" />
         
         {/* Additional Meta Tags */}
-        <meta name="robots" content={siteSettings.meta_robots || "index, follow"} />
+        <meta name="robots" content={`${siteSettings.meta_robots || "index, follow"}, max-image-preview:large`} />
         <meta name="author" content={siteSettings.site_author} />
-        <meta name="language" content="en" />
-        <meta name="revisit-after" content="7 days" />
+        <meta name="language" content="id" />
+        <meta name="geo.country" content="ID" />
+        <meta name="geo.placename" content="Indonesia" />
+        <meta name="distribution" content="Indonesia" />
+        <meta name="revisit-after" content="1 day" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="theme-color" content="#000000" />
         
         {/* Schema.org JSON-LD structured data */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: generateJsonLd() }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: generateWebsiteJsonLd() }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: generateBreadcrumbJsonLd() }} />
       </Head>
 
-      <div className="container mx-auto py-8 px-4 md:px-6 mt-4">
-        {/* Breadcrumbs for SEO and navigation */}
+      <div className="container mx-auto py-6 px-4 md:px-6 mt-20">
+        {/* Enhanced Breadcrumbs for SEO with Indonesian localization */}
         <nav aria-label="Breadcrumb" className="mb-6">
           <ol className="flex items-center space-x-2 text-sm text-gray-400">
             <li>
               <Link href="/" className="flex items-center hover:text-white transition-colors">
                 <Home size={14} className="mr-1" />
-                <span>Home</span>
+                <span>Beranda</span>
               </Link>
             </li>
             <li>
@@ -253,14 +405,16 @@ export default function AnimeDetailPage() {
               {isExternalImage(anime.banner) ? (
                 <img 
                   src={anime.banner} 
-                  alt={`${anime.title} - ${anime.released_year} ${anime.type} poster`} 
+                  alt={`${anime.title} - ${anime.released_year} ${anime.type} subtitle Indonesia poster`} 
                   className="object-cover w-full h-full"
                   loading="eager"
+                  width="400"
+                  height="600"
                 />
               ) : (
                 <Image 
                   src={anime.banner} 
-                  alt={`${anime.title} - ${anime.released_year} ${anime.type} poster`} 
+                  alt={`${anime.title} - ${anime.released_year} ${anime.type} subtitle Indonesia poster`} 
                   fill 
                   className="object-cover" 
                   priority 
@@ -270,10 +424,10 @@ export default function AnimeDetailPage() {
             </div>
 
             <div className="space-y-4 bg-black/40 p-4 rounded-lg backdrop-blur-lg">
-              <AnimeInfoRow icon={<FilmIcon aria-hidden="true" />} text={`${anime.type} • ${anime.status}`} label="Type and Status" />
-              <AnimeInfoRow icon={<Calendar aria-hidden="true" />} text={`${anime.released_year} • ${anime.season}`} label="Release and Season" />
-              <AnimeInfoRow icon={<User aria-hidden="true" />} text={`Posted by ${anime.posted_by}`} label="Author" />
-              <AnimeInfoRow icon={<Clock aria-hidden="true" />} text={`Updated on ${anime.updated_on}`} label="Last Updated" />
+              <AnimeInfoRow icon={<FilmIcon aria-hidden="true" />} text={`${anime.type} • ${anime.status}`} label="Tipe dan Status" />
+              <AnimeInfoRow icon={<Calendar aria-hidden="true" />} text={`${anime.released_year} • ${anime.season}`} label="Tahun Rilis dan Musim" />
+              <AnimeInfoRow icon={<User aria-hidden="true" />} text={`Diposting oleh ${anime.posted_by}`} label="Penulis" />
+              <AnimeInfoRow icon={<Clock aria-hidden="true" />} text={`Diperbarui pada ${anime.updated_on}`} label="Terakhir Diperbarui" />
 
               <div className="pt-2">
                 <h3 className="text-sm text-white font-medium mb-2">Studio</h3>
@@ -281,7 +435,7 @@ export default function AnimeDetailPage() {
               </div>
 
               <div className="pt-2">
-                <h3 className="text-sm text-white font-medium mb-2">Genres</h3>
+                <h3 className="text-sm text-white font-medium mb-2">Genre</h3>
                 <div className="flex flex-wrap gap-2">
                   {anime.genres.map((genre) => (
                     <Link 
@@ -295,32 +449,49 @@ export default function AnimeDetailPage() {
                   ))}
                 </div>
               </div>
+              
+              {/* Indonesian-specific sharing options */}
+              <div className="pt-4">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full flex items-center justify-center gap-2"
+                  onClick={handleShare}
+                >
+                  <Share2 size={16} />
+                  <span>Bagikan ke Teman</span>
+                </Button>
+              </div>
             </div>
           </div>
 
           {/* Right Column */}
           <div className="md:col-span-2">
             <header>
-              <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">{anime.title}</h1>
+              <h1 className="text-3xl md:text-4xl font-bold text-white mb-4" id="anime-title">{anime.title}</h1>
+              <div className="mb-4">
+                <h2 className="sr-only">Judul Alternatif</h2>
+                <p className="text-gray-300 text-sm">{anime.title} Sub Indo</p>
+              </div>
             </header>
 
             <section className="mb-6 mt-4">
-              <h2 className="text-xl font-semibold text-white mb-2">Synopsis</h2>
+              <h2 className="text-xl font-semibold text-white mb-2">Sinopsis</h2>
               <p className="text-gray-300">{anime.sinopsis}</p>
             </section>
 
             <Tabs defaultValue="episodes" className="w-full mt-4">
               <TabsList className="mb-4">
                 <TabsTrigger value="episodes" className="bg-black/40 hover:bg-black/50 transition-colors">
-                  Episodes
+                  Episode
                 </TabsTrigger>
                 <TabsTrigger value="related" className="bg-black/40 hover:bg-black/50 transition-colors">
-                  Related Anime
+                  Anime Terkait
                 </TabsTrigger>
               </TabsList>
 
               <TabsContent value="episodes" className="space-y-4">
-                <h2 className="text-xl font-semibold text-white">Episodes List</h2>
+                <h2 className="text-xl font-semibold text-white">Daftar Episode</h2>
                 <ScrollArea className="h-[500px] pr-4">
                   <div className="space-y-3">
                     {anime.episodes.map((episode) => (
@@ -337,7 +508,7 @@ export default function AnimeDetailPage() {
 
               <TabsContent value="related">
                 <div className="bg-black/40 p-6 rounded-lg backdrop-blur-lg">
-                  <p className="text-center text-gray-400">Related anime will be available soon.</p>
+                  <p className="text-center text-gray-400">Anime terkait akan tersedia segera.</p>
                 </div>
               </TabsContent>
             </Tabs>
@@ -346,27 +517,43 @@ export default function AnimeDetailPage() {
 
         {/* Modal for Video */}
         {isModalOpen && currentVideo && (
-          <div className="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50">
-            <div className="relative w-full h-full">
+          <div className="fixed inset-0 bg-black bg-opacity-90 flex justify-center items-center z-50">
+            <div className="relative w-full max-w-5xl h-full max-h-[90vh]">
               <button 
-                className="absolute top-4 right-4 p-2 text-white bg-black/50 rounded-full hover:bg-black/80 transition-colors"
+                className="absolute top-4 right-4 p-2 text-white bg-black/70 rounded-full hover:bg-black/90 transition-colors z-10"
                 onClick={handleCloseModal}
-                aria-label="Close video player"
+                aria-label="Tutup pemutar video"
               >
-                <span className="sr-only">Close</span>
+                <span className="sr-only">Tutup</span>
                 X
               </button>
               <iframe 
                 src={currentVideo} 
-                title={`Watch ${anime.title} episode`}
+                title={`Tonton ${anime.title} episode - Subtitle Indonesia`}
                 width="100%" 
                 height="100%" 
                 frameBorder="0" 
                 allowFullScreen 
+                loading="lazy"
               />
             </div>
           </div>
         )}
+        
+        {/* Indonesia-specific fast loading recommendation section */}
+        <section className="mt-16 bg-black/30 p-6 rounded-lg">
+          <h2 className="text-xl font-bold mb-4">Tips Nonton Lancar</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div className="bg-black/20 p-3 rounded">
+              <h3 className="font-medium mb-2">Mode Hemat Data</h3>
+              <p>Untuk koneksi internet lambat, pilih kualitas 360p atau 480p untuk streaming lebih lancar.</p>
+            </div>
+            <div className="bg-black/20 p-3 rounded">
+              <h3 className="font-medium mb-2">Server Alternatif</h3>
+              <p>Jika video tidak berjalan lancar, coba pilih server berbeda yang lebih dekat dengan lokasi Anda.</p>
+            </div>
+          </div>
+        </section>
       </div>
     </>
   );
@@ -408,17 +595,17 @@ function EpisodeCard({
           variant="outline" 
           size="sm" 
           onClick={() => onOpenModal(episode.Link)}
-          aria-label={`Watch ${episode.Title}`}
+          aria-label={`Tonton ${episode.Title} subtitle Indonesia`}
         >
-          Watch Episode
+          Tonton Episode
         </Button>
         <Button 
           variant="secondary" 
           size="sm" 
           onClick={() => onOpenModal(episode.Link)}
-          aria-label={`Stream ${episode.Title}`}
+          aria-label={`Streaming ${episode.Title} sub Indo`}
         >
-          Stream Episode
+          Streaming
         </Button>
       </div>
     </article>
