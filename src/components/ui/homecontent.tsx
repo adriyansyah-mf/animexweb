@@ -10,6 +10,63 @@ const fadeInUp = {
   visible: { opacity: 1, y: 0 },
 };
 
+// Define the type for AnimeCard props
+interface AnimeCardProps {
+  anime: {
+    id: string | number;
+    title: string;
+    banner: string;
+    released_year: string | number;
+    genres: string[];
+  };
+  index: number;
+  title?: string;
+  selectedGenre: string;
+  handleGenreClick: (genre: string) => void;
+  convertToSlug: (text: string) => string;
+}
+
+// AnimeCard component with proper TypeScript typing
+const AnimeCard = ({ anime, index, title = "", selectedGenre, handleGenreClick, convertToSlug }: AnimeCardProps) => {
+  return (
+    <motion.div
+      className="bg-white/10 backdrop-blur-md rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow duration-300 text-white"
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, amount: 0.2 }}
+      variants={fadeInUp}
+      transition={{ duration: 0.4, delay: index * 0.05 }}
+    >
+      <img
+        src={anime.banner}
+        alt={anime.title}
+        className="w-full h-60 object-cover rounded-lg mb-3"
+      />
+      <Link href={`/anime/${convertToSlug(anime.title)}-${anime.id}`}>
+        <h3 className="text-lg font-bold line-clamp-2 cursor-pointer">
+          {anime.title}
+        </h3>
+      </Link>
+      <p className="text-sm text-gray-400">{anime.released_year}</p>
+      <div className="mt-2 flex flex-wrap gap-2">
+        {anime.genres.map((genre: string) => (
+          <button
+            key={`${anime.id}-${genre}`}
+            className={`text-xs px-2 py-1 rounded-full border ${
+              selectedGenre === genre
+                ? "bg-[#2F88FF] text-white border-[#2F88FF]"
+                : "bg-[#2F88FF]/20 text-white border-[#2F88FF] hover:bg-[#2F88FF]/40"
+            }`}
+            onClick={() => handleGenreClick(genre)}
+          >
+            {genre}
+          </button>
+        ))}
+      </div>
+    </motion.div>
+  );
+};
+
 const HomeContent = () => {
   const [animes, setAnimes] = useState<any[]>([]);
   const [newestAnimes, setNewestAnimes] = useState<any[]>([]);
@@ -159,42 +216,15 @@ const HomeContent = () => {
         <h2 className="text-2xl font-bold text-white mb-6">{title}</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
           {animes.map((anime, index) => (
-            <motion.div
+            <AnimeCard
               key={`${title}-${anime.id}-${index}`}
-              className="bg-white/10 backdrop-blur-md rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow duration-300 text-white"
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.2 }}
-              variants={fadeInUp}
-              transition={{ duration: 0.4, delay: index * 0.05 }}
-            >
-              <img
-                src={anime.banner}
-                alt={anime.title}
-                className="w-full h-60 object-cover rounded-lg mb-3"
-              />
-              <Link href={`/anime/${convertToSlug(anime.title)}-${anime.id}`}>
-                <h3 className="text-lg font-bold line-clamp-2 cursor-pointer">
-                  {anime.title}
-                </h3>
-              </Link>
-              <p className="text-sm text-gray-400">{anime.released_year}</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {anime.genres.map((genre: string) => (
-                  <button
-                    key={`${anime.id}-${genre}`}
-                    className={`text-xs px-2 py-1 rounded-full border ${
-                      selectedGenre === genre
-                        ? "bg-[#2F88FF] text-white border-[#2F88FF]"
-                        : "bg-[#2F88FF]/20 text-white border-[#2F88FF] hover:bg-[#2F88FF]/40"
-                    }`}
-                    onClick={() => handleGenreClick(genre)}
-                  >
-                    {genre}
-                  </button>
-                ))}
-              </div>
-            </motion.div>
+              anime={anime}
+              index={index}
+              title={title}
+              selectedGenre={selectedGenre}
+              handleGenreClick={handleGenreClick}
+              convertToSlug={convertToSlug}
+            />
           ))}
         </div>
       </div>
@@ -214,42 +244,14 @@ const HomeContent = () => {
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
           {animes.map((anime, index) => (
-            <motion.div
-              key={`${anime.id}-${index}`}
-              className="bg-white/10 backdrop-blur-md rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow duration-300 text-white"
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.2 }}
-              variants={fadeInUp}
-              transition={{ duration: 0.4, delay: index * 0.05 }}
-            >
-              <img
-                src={anime.banner}
-                alt={anime.title}
-                className="w-full h-60 object-cover rounded-lg mb-3"
-              />
-              <Link href={`/anime/${convertToSlug(anime.title)}-${anime.id}`}>
-                <h3 className="text-lg font-bold line-clamp-2 cursor-pointer">
-                  {anime.title}
-                </h3>
-              </Link>
-              <p className="text-sm text-gray-400">{anime.released_year}</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {anime.genres.map((genre: string) => (
-                  <button
-                    key={`${anime.id}-${genre}`}
-                    className={`text-xs px-2 py-1 rounded-full border ${
-                      selectedGenre === genre
-                        ? "bg-[#2F88FF] text-white border-[#2F88FF]"
-                        : "bg-[#2F88FF]/20 text-white border-[#2F88FF] hover:bg-[#2F88FF]/40"
-                    }`}
-                    onClick={() => handleGenreClick(genre)}
-                  >
-                    {genre}
-                  </button>
-                ))}
-              </div>
-            </motion.div>
+            <AnimeCard
+              key={`all-${anime.id}-${index}`}
+              anime={anime}
+              index={index}
+              selectedGenre={selectedGenre}
+              handleGenreClick={handleGenreClick}
+              convertToSlug={convertToSlug}
+            />
           ))}
         </div>
 
