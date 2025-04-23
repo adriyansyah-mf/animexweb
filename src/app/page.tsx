@@ -122,72 +122,9 @@ function generateJsonLd() {
 }
 
 // Featured content component with improved SEO structure
-function FeaturedContent() {
-  return (
-    <section aria-labelledby="featured-heading" className="w-full mb-10">
-      <h2 id="featured-heading" className="text-2xl font-bold mb-6">Featured Anime</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {/* Placeholder content - Replace with actual data */}
-        {[1, 2, 3, 4].map((item) => (
-          <article key={item} className="rounded-lg overflow-hidden bg-gray-800 hover:shadow-lg transition-shadow">
-            <Link href={`/anime/featured-anime-${item}`} className="block">
-              <div className="relative h-48 w-full">
-                <Image 
-                  src={`/api/placeholder/300/200`} 
-                  alt={`Featured anime ${item}`} 
-                  fill 
-                  className="object-cover" 
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                  priority={item <= 2} // Load first two images with priority
-                />
-              </div>
-              <div className="p-4">
-                <h3 className="font-medium text-lg">Featured Anime Title {item}</h3>
-                <div className="flex items-center text-sm text-gray-400 mt-2">
-                  <span>2023</span>
-                  <span className="mx-2">•</span>
-                  <span>TV Series</span>
-                </div>
-              </div>
-            </Link>
-          </article>
-        ))}
-      </div>
-    </section>
-  );
-}
 
 // Recent updates component
-function RecentUpdates() {
-  return (
-    <section aria-labelledby="recent-heading" className="w-full">
-      <h2 id="recent-heading" className="text-2xl font-bold mb-6">Recently Updated</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {/* Placeholder content - Replace with actual data */}
-        {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
-          <article key={item} className="rounded-lg overflow-hidden bg-gray-800 hover:shadow-lg transition-shadow">
-            <Link href={`/anime/recent-anime-${item}`} className="block">
-              <div className="relative h-36 w-full">
-                <Image 
-                  src={`/api/placeholder/240/160`} 
-                  alt={`Recent anime ${item}`} 
-                  fill 
-                  className="object-cover" 
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                  loading="lazy"
-                />
-              </div>
-              <div className="p-3">
-                <h3 className="font-medium">Recent Anime Title {item}</h3>
-                <p className="text-xs text-gray-400 mt-1">Episode {Math.floor(Math.random() * 10) + 1}</p>
-              </div>
-            </Link>
-          </article>
-        ))}
-      </div>
-    </section>
-  );
-}
+
 
 // Loading component for Suspense fallback
 function Loading() {
@@ -232,55 +169,18 @@ export default function Home() {
               className="object-cover" 
               sizes="(max-width: 1280px) 100vw, 1280px"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-6">
-              <h1 className="text-2xl md:text-4xl font-bold text-white drop-shadow-md">
-                Watch the Latest Anime Episodes
-              </h1>
-            </div>
+           
           </div>
         </header>
       
         <main className="flex flex-col gap-12 w-full max-w-7xl">
-          <Suspense fallback={<Loading />}>
-            <FeaturedContent />
-            <RecentUpdates />
-          </Suspense>
+   
           
           {/* Popular Categories Section */}
-          <section aria-labelledby="categories-heading" className="w-full">
-            <h2 id="categories-heading" className="text-2xl font-bold mb-6">Popular Categories</h2>
-            <div className="flex flex-wrap gap-3">
-              {['Action', 'Romance', 'Comedy', 'Fantasy', 'Adventure', 'Sci-Fi', 'Isekai', 'Drama'].map((genre) => (
-                <Link 
-                  key={genre} 
-                  href={`/genre/${genre.toLowerCase()}`}
-                  className="px-4 py-2 bg-gray-800 rounded-full hover:bg-gray-700 transition-colors"
-                >
-                  {genre}
-                </Link>
-              ))}
-            </div>
-          </section>
+          
           
           {/* CTA Section */}
-          <section aria-labelledby="cta-heading" className="w-full bg-gray-800 rounded-lg p-8 text-center">
-            <h2 id="cta-heading" className="text-2xl font-bold mb-4">Start Watching Now</h2>
-            <p className="mb-6 max-w-2xl mx-auto">Access thousands of anime episodes with HD quality and fast streaming. Create an account to track your watch history and get personalized recommendations.</p>
-            <div className="flex flex-wrap justify-center gap-4">
-              <Link 
-                href="/signup" 
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors"
-              >
-                Sign Up - It's Free
-              </Link>
-              <Link 
-                href="/browse" 
-                className="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg font-medium transition-colors"
-              >
-                Browse Anime
-              </Link>
-            </div>
-          </section>
+         
         </main>
         
         {/* Page Footer */}
