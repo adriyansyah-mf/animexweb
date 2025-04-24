@@ -113,6 +113,7 @@ export default function RootLayout({
         <meta name="description" content={metadata.description} />
         <meta name="keywords" content={metadata.keywords} />
         <meta name="robots" content={metadata.robots} />
+        <meta name="yandex-verification" content="dad1776e20795692" />
       </Head>
       <body className={inter.className}>
         <GoogleAnalytics gaId="G-JSC21PRNYD" />

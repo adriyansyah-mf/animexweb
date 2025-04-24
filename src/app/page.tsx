@@ -33,7 +33,7 @@ export async function generateMetadata(): Promise<Metadata> {
     const data: SiteSettings = await res.json();
     
     // Get current URL for canonical link
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://yourdomain.com';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://otakustream.xyz';
     
     return {
       title: {
@@ -49,7 +49,7 @@ export async function generateMetadata(): Promise<Metadata> {
       alternates: {
         canonical: baseUrl,
         languages: {
-          'en-US': `${baseUrl}/en-US`,
+          'id-ID': `${baseUrl}/`,
           'ja-JP': `${baseUrl}/ja-JP`,
         },
       },
@@ -73,7 +73,7 @@ export async function generateMetadata(): Promise<Metadata> {
         card: 'summary_large_image',
         title: data.meta_title,
         description: data.meta_description,
-        creator: '@yoursitehandle',
+        creator: '@otakustream',
         images: [data.logo_url || `${baseUrl}/images/default-twitter.jpg`],
       },
       viewport: {
@@ -93,20 +93,20 @@ export async function generateMetadata(): Promise<Metadata> {
     console.error('Error fetching metadata:', error);
     // Fallback metadata
     return {
-      title: 'Anime Streaming Website',
-      description: 'Watch free anime online with English subtitles',
+      title: 'Otakustream, situs streaming anime terlengkap',
+      description: 'Web Streaming anime berkualitas FULL HD,4K,1080p',
     };
   }
 }
 
 // JSON-LD structured data for better search engine understanding
 function generateJsonLd() {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://yourdomain.com';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://otkustream.xyz';
   
   return {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    'name': 'Anime Streaming Site',
+    'name': 'otakustream',
     'url': baseUrl,
     'potentialAction': {
       '@type': 'SearchAction',
