@@ -38,7 +38,7 @@ export async function generateMetadata(): Promise<Metadata> {
     return {
       title: {
         template: `%s | ${data.site_name}`,
-        default: data.meta_title || `${data.site_name} - Watch Anime Online`,
+        default: data.meta_title || `${data.site_name} - Nonton Anime Online`,
       },
       description: data.meta_description,
       keywords: data.site_keywords,
@@ -159,20 +159,7 @@ export default function Home() {
       
       <div className="grid grid-rows-[auto_1fr_auto] items-center justify-items-center min-h-screen p-4 pb-20 gap-8 sm:p-8 lg:p-12 font-[family-name:var(--font-geist-sans)]">
         {/* Hero Banner */}
-        <header className="w-full max-w-7xl">
-          <div className="relative h-64 md:h-80 w-full rounded-lg overflow-hidden mb-10">
-            <Image 
-              src="/api/placeholder/1200/400" 
-              alt="Welcome to Anime Streaming Site" 
-              fill 
-              priority
-              className="object-cover" 
-              sizes="(max-width: 1280px) 100vw, 1280px"
-            />
-           
-          </div>
-        </header>
-      
+
         <main className="flex flex-col gap-12 w-full max-w-7xl">
    
           
@@ -184,15 +171,6 @@ export default function Home() {
         </main>
         
         {/* Page Footer */}
-        <footer className="w-full max-w-7xl text-center text-sm text-gray-400 pt-12">
-          <p>© {new Date().getFullYear()} Anime Streaming Site. All rights reserved.</p>
-          <div className="flex justify-center gap-6 mt-3">
-            <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
-            <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
-            <Link href="/dmca" className="hover:text-white transition-colors">DMCA</Link>
-            <Link href="/contact" className="hover:text-white transition-colors">Contact</Link>
-          </div>
-        </footer>
       </div>
     </>
   );
