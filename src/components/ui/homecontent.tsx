@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import GlassmorphismNavbar from "@/components/ui/navbar";
+import Script from "next/script";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 40 },
@@ -80,6 +81,36 @@ const HomeContent = () => {
   const observer = useRef<IntersectionObserver | null>(null);
   const loaderRef = useRef<HTMLDivElement>(null);
   const topRef = useRef<HTMLDivElement>(null);
+  
+  // Ref for the ad container
+  const adRef = useRef<HTMLDivElement>(null);
+
+  // Effect to initialize ads
+  useEffect(() => {
+    // This will run when the component mounts and create the ad script
+    const script1 = document.createElement('script');
+    script1.type = 'text/javascript';
+    script1.text = `atOptions = { 'key' : 'b03053da9f4dbc17385dc7f77f3a436a', 'format' : 'iframe', 'height' : 90, 'width' : 728, 'params' : {} };`;
+    
+    const script2 = document.createElement('script');
+    script2.type = 'text/javascript';
+    script2.src = '//www.highperformanceformat.com/b03053da9f4dbc17385dc7f77f3a436a/invoke.js';
+    
+    // Only add the scripts if the adRef container exists and doesn't already have them
+    if (adRef.current && !adRef.current.hasChildNodes()) {
+      adRef.current.appendChild(script1);
+      adRef.current.appendChild(script2);
+    }
+    
+    // Cleanup function to remove scripts when component unmounts
+    return () => {
+      if (adRef.current) {
+        while (adRef.current.firstChild) {
+          adRef.current.removeChild(adRef.current.firstChild);
+        }
+      }
+    };
+  }, []);
 
   const fetchAnimes = async (currentPage: number, searchQuery = "", genreFilter = "") => {
     try {
@@ -236,6 +267,12 @@ const HomeContent = () => {
       <GlassmorphismNavbar navItems={[]} onSearch={(q) => setSearch(q)} />
       <div ref={topRef} className="container mx-auto py-10 px-4">
         {renderAnimeSection("Newest Anime", newestAnimes)}
+        
+        {/* Ad container above Ongoing Anime section */}
+        <div className="w-full flex justify-center my-8">
+          <div ref={adRef} className="ad-container"></div>
+        </div>
+        
         {renderAnimeSection("Ongoing Anime", ongoingAnimes)}
         {renderAnimeSection("Completed Anime", completedAnimes)}
 

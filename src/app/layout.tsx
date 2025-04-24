@@ -114,6 +114,7 @@ export default function RootLayout({
         <meta name="keywords" content={metadata.keywords} />
         <meta name="robots" content={metadata.robots} />
         <meta name="yandex-verification" content="dad1776e20795692" />
+        <script type='text/javascript' src='//pl26466615.profitableratecpm.com/73/f7/42/73f74251b76cfef75e40d7170682a969.js'></script>
       </Head>
       <body className={inter.className}>
         <GoogleAnalytics gaId="G-JSC21PRNYD" />

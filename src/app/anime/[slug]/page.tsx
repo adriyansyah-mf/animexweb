@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -47,6 +47,40 @@ interface SiteSettings {
   logo_url: string | null;
   google_analytics_id: string | null;
   facebook_pixel_id: string | null;
+}
+
+// Advertisement Component
+interface AdvertisementProps {
+  containerId?: string;
+}
+
+export function Advertisement({ containerId }: AdvertisementProps) {
+  const adContainerRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    // Only run on client side
+    if (typeof window !== "undefined") {
+      // Create script element
+      const script = document.createElement("script");
+      script.async = true;
+      script.dataset.cfasync = "false";
+      script.src = "//pl26466628.profitableratecpm.com/714e78d4b3b17786d5fca92c3e416b2f/invoke.js";
+      
+      // Insert script before the container div
+      if (adContainerRef.current && adContainerRef.current.parentNode) {
+        adContainerRef.current.parentNode.insertBefore(script, adContainerRef.current);
+      }
+      
+      // Cleanup function to remove script when component unmounts
+      return () => {
+        if (script.parentNode) {
+          script.parentNode.removeChild(script);
+        }
+      };
+    }
+  }, []);
+  
+  return <div id={containerId || "container-714e78d4b3b17786d5fca92c3e416b2f"} ref={adContainerRef} className="my-6"></div>;
 }
 
 export default function AnimeDetailPage() {
@@ -114,7 +148,7 @@ export default function AnimeDetailPage() {
         const animeDetail = await detailRes.json();
         setAnime(animeDetail);
         
-        // Preload critical resources for faster loading (important for Indonesian users with variable connection speeds)
+        // Preload critical resources for faster loading
         if (animeDetail.banner) {
           // Create an image element for preloading
           const preloadImg = document.createElement('img');
@@ -403,6 +437,9 @@ export default function AnimeDetailPage() {
 
   return (
     <div className="container mx-auto py-6 px-4 md:px-6 mt-20">
+      {/* Top Ad Banner */}
+      <Advertisement containerId="container-714e78d4b3b17786d5fca92c3e416b2f-top" />
+      
       {/* Enhanced Breadcrumbs for SEO with Indonesian localization */}
       <nav aria-label="Breadcrumb" className="mb-6">
         <ol className="flex items-center space-x-2 text-sm text-gray-400">
@@ -494,6 +531,11 @@ export default function AnimeDetailPage() {
               </Button>
             </div>
           </div>
+          
+          {/* Ad in sidebar */}
+          <div className="mt-6">
+            <Advertisement containerId="container-714e78d4b3b17786d5fca92c3e416b2f-sidebar" />
+          </div>
         </div>
 
         {/* Right Column */}
@@ -510,6 +552,9 @@ export default function AnimeDetailPage() {
             <h2 className="text-xl font-semibold text-white mb-2">Sinopsis</h2>
             <p className="text-gray-300">{anime.sinopsis}</p>
           </section>
+          
+          {/* Ad between synopsis and episode list */}
+          <Advertisement containerId="container-714e78d4b3b17786d5fca92c3e416b2f-middle" />
 
           <Tabs defaultValue="episodes" className="w-full mt-4">
             <TabsList className="mb-4">
@@ -545,6 +590,9 @@ export default function AnimeDetailPage() {
           </Tabs>
         </div>
       </div>
+
+      {/* Bottom Ad Banner */}
+      <Advertisement containerId="container-714e78d4b3b17786d5fca92c3e416b2f-bottom" />
 
       {/* Modal for Video */}
       {isModalOpen && currentVideo && (
@@ -585,6 +633,9 @@ export default function AnimeDetailPage() {
           </div>
         </div>
       </section>
+      
+      {/* Final Ad Banner */}
+      <Advertisement containerId="container-714e78d4b3b17786d5fca92c3e416b2f-footer" />
     </div>
   );
 }
