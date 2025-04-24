@@ -27,7 +27,7 @@ export default function RootLayout({
     description: "Fetching metadata from API...",
     keywords: "",
     robots: "index, follow",
-    siteName: "Animeku", // default
+    siteName: "Otakustream", // default
   });
 
   const [anime, setAnime] = useState<any>(null);
@@ -50,16 +50,16 @@ export default function RootLayout({
           description: data.meta_description || "Default Description",
           keywords: data.site_keywords || "",
           robots: data.meta_robots || "index, follow",
-          siteName: data.site_name || "Animeku", // masukin siteName dari API
+          siteName: data.site_name || "Otakustream", // masukin siteName dari API
         });
       } catch (error) {
         console.error("Error fetching site settings:", error);
         setMetadata({
-          title: "Default Title",
-          description: "Default Description",
+          title: "Otakustream",
+          description: "Nonton Anime Full Subtitle Indonesia Ultra HD",
           keywords: "",
           robots: "index, follow",
-          siteName: "Animeku",
+          siteName: "Otakustream",
         });
       }
     };
