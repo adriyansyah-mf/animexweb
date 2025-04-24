@@ -431,7 +431,7 @@ export default function AnimeDetailPage() {
               <span className="mx-2">/</span>
             </li>
             <li>
-              <Link href="/anime" className="hover:text-white transition-colors">
+              <Link href="/anime/lists" className="hover:text-white transition-colors">
                 Anime
               </Link>
             </li>
