@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Clock, FilmIcon, User, Home, Share2, Download } from "lucide-react";
+import { Calendar, Clock, FilmIcon, User, Home, Share2, Download, X, Maximize, Minimize, Volume2, VolumeX } from "lucide-react";
+import {Advertisement} from "@/components/adverstiment"
 import Head from "next/head";
 
 // Type definitions
@@ -60,6 +61,10 @@ export default function AnimeDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentVideo, setCurrentVideo] = useState<string | null>(null);
+  const [currentEpisodeTitle, setCurrentEpisodeTitle] = useState("");
+  const [isIframeLoading, setIsIframeLoading] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
   const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null);
   const [canonicalUrl, setCanonicalUrl] = useState("");
   const [browserLanguage, setBrowserLanguage] = useState("id-ID");
@@ -83,7 +88,9 @@ export default function AnimeDetailPage() {
     }
 
     // Set canonical URL to prevent duplicate content issues
-    setCanonicalUrl(`${window.location.origin}${window.location.pathname}`);
+    if (typeof window !== 'undefined') {
+      setCanonicalUrl(`${window.location.origin}${window.location.pathname}`);
+    }
     
     const fetchSiteSettings = async () => {
       try {
@@ -115,14 +122,11 @@ export default function AnimeDetailPage() {
         const animeDetail = await detailRes.json();
         setAnime(animeDetail);
         
-        // Preload critical resources for faster loading (important for Indonesian users with variable connection speeds)
+        // Preload critical resources for faster loading
         if (animeDetail.banner) {
-          // Create an image element for preloading
           const preloadImg = document.createElement('img');
           preloadImg.src = animeDetail.banner;
-          // Optional: prevent the image from being displayed
           preloadImg.style.display = 'none';
-          // Optional: remove the element after load to avoid memory issues
           preloadImg.onload = () => {
             if (preloadImg.parentNode) {
               preloadImg.parentNode.removeChild(preloadImg);
@@ -141,21 +145,79 @@ export default function AnimeDetailPage() {
     if (id) fetchAnimeDetail();
   }, [id]);
 
-  const handleOpenModal = (videoUrl: string) => {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isModalOpen) {
+        handleCloseModal();
+      }
+      if (e.key === 'f' && isModalOpen) {
+        toggleFullscreen();
+      }
+      if (e.key === 'm' && isModalOpen) {
+        toggleMute();
+      }
+    };
+
+    const handlePopState = () => {
+      if (isModalOpen) {
+        handleCloseModal();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [isModalOpen]);
+
+  const handleOpenModal = (videoUrl: string, episodeTitle: string) => {
     setCurrentVideo(videoUrl);
+    setCurrentEpisodeTitle(episodeTitle);
     setIsModalOpen(true);
+    setIsIframeLoading(true);
+    document.body.style.overflow = 'hidden';
+    
+    // Add to browser history
+    window.history.pushState({ modalOpen: true }, '', '#watch');
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setCurrentVideo(null);
+    setCurrentEpisodeTitle("");
+    document.body.style.overflow = 'auto';
+    
+    // Restore the URL
+    if (window.location.hash === '#watch') {
+      window.history.back();
+    }
+  };
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => {
+        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+      setIsFullscreen(true);
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+        setIsFullscreen(false);
+      }
+    }
+  };
+
+  const toggleMute = () => {
+    setIsMuted(!isMuted);
   };
 
   const isExternalImage = (url: string) => {
     return url.startsWith("http://") || url.startsWith("https://");
   };
 
-  // Share content function optimized for Indonesian platforms
   const handleShare = () => {
     if (navigator.share && anime) {
       navigator.share({
@@ -164,32 +226,25 @@ export default function AnimeDetailPage() {
         url: canonicalUrl,
       }).catch(console.error);
     } else {
-      // Fallback for browsers that don't support Web Share API
       const shareText = anime ? 
         `Tonton ${anime.title} (${anime.released_year}) ${anime.type} secara gratis dengan kualitas terbaik! ${canonicalUrl}` : 
         canonicalUrl;
-      
-      // WhatsApp is extremely popular in Indonesia
       window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
     }
   };
 
-  // Improved title with Indonesian-specific keyword placement
   const animeTitleForMeta = anime ? 
     `Nonton ${anime.title} (${anime.released_year}) ${anime.type} Sub Indo ${anime.status} - ${siteSettings?.site_name}` : 
     siteSettings?.meta_title || "";
     
-  // Enhanced meta description with Indonesian keywords and improved CTA for local audience
   const metaDescription = anime ? 
     `Streaming ${anime.title} Subtitle Indonesia (${anime.released_year}) ${anime.type} dengan ${anime.episodes.length} episode. Anime ${anime.status} dari ${anime.studio}. Nonton anime ${anime.genres.join(", ")} online gratis dengan kualitas HD dan server cepat hanya di ${siteSettings?.site_name}.` : 
     siteSettings?.meta_description || "";
 
-  // Enhanced keywords for Indonesian audience  
   const enhancedKeywords = anime ? 
     `${anime.title}, ${anime.title} sub indo, nonton ${anime.title}, streaming ${anime.title}, download ${anime.title}, anime ${anime.genres.join(", ")}, ${anime.type} subtitle indonesia, ${anime.status}, ${anime.studio}, anime indonesia, streaming anime, nonton anime online` : 
     "";
 
-  // Generate localized JSON-LD structured data for the anime
   const generateJsonLd = () => {
     if (!anime || !siteSettings) return "";
 
@@ -228,7 +283,7 @@ export default function AnimeDetailPage() {
       "provider": {
         "@type": "Organization",
         "name": siteSettings.site_name,
-        "url": window.location.origin
+        "url": typeof window !== 'undefined' ? window.location.origin : ""
       },
       "potentialAction": {
         "@type": "WatchAction",
@@ -248,7 +303,6 @@ export default function AnimeDetailPage() {
     return JSON.stringify(jsonLd);
   };
 
-  // Generate WebSite structured data
   const generateWebsiteJsonLd = () => {
     if (!siteSettings) return "";
 
@@ -257,10 +311,10 @@ export default function AnimeDetailPage() {
       "@type": "WebSite",
       "name": siteSettings.site_name,
       "description": siteSettings.site_description,
-      "url": window.location.origin,
+      "url": typeof window !== 'undefined' ? window.location.origin : "",
       "potentialAction": {
         "@type": "SearchAction",
-        "target": `${window.location.origin}/search?q={search_term_string}`,
+        "target": `${typeof window !== 'undefined' ? window.location.origin : ""}/search?q={search_term_string}`,
         "query-input": "required name=search_term_string"
       },
       "inLanguage": ["id", "en"],
@@ -277,7 +331,6 @@ export default function AnimeDetailPage() {
     return JSON.stringify(jsonLd);
   };
 
-  // Generate BreadcrumbList structured data
   const generateBreadcrumbJsonLd = () => {
     if (!anime) return "";
 
@@ -289,13 +342,13 @@ export default function AnimeDetailPage() {
           "@type": "ListItem",
           "position": 1,
           "name": "Beranda",
-          "item": window.location.origin
+          "item": typeof window !== 'undefined' ? window.location.origin : ""
         },
         {
           "@type": "ListItem",
           "position": 2,
           "name": "Anime",
-          "item": `${window.location.origin}/anime`
+          "item": `${typeof window !== 'undefined' ? window.location.origin : ""}/anime`
         },
         {
           "@type": "ListItem",
@@ -325,19 +378,16 @@ export default function AnimeDetailPage() {
 
   return (
     <>
-      {/* Enhanced SEO Metadata for Indonesian Audience */}
       <Head>
         <title>{animeTitleForMeta}</title>
         <meta name="description" content={metaDescription} />
         <meta name="keywords" content={enhancedKeywords} />
         <link rel="canonical" href={canonicalUrl} />
         
-        {/* Language and Region Tags */}
         <meta httpEquiv="content-language" content="id-ID" />
         <link rel="alternate" href={canonicalUrl} hrefLang="id-ID" />
         <link rel="alternate" href={canonicalUrl} hrefLang="x-default" />
         
-        {/* Open Graph / Facebook - Popular in Indonesia */}
         <meta property="og:type" content="video.tv_show" />
         <meta property="og:title" content={animeTitleForMeta} />
         <meta property="og:description" content={metaDescription} />
@@ -346,14 +396,12 @@ export default function AnimeDetailPage() {
         <meta property="og:site_name" content={siteSettings.site_name} />
         <meta property="og:locale" content="id_ID" />
         
-        {/* Twitter */}
         <meta name="twitter:title" content={animeTitleForMeta} />
         <meta name="twitter:description" content={metaDescription} />
         <meta name="twitter:image" content={anime.banner} />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:site" content="@yoursitename" />
         
-        {/* Additional Meta Tags */}
         <meta name="robots" content={`${siteSettings.meta_robots || "index, follow"}, max-image-preview:large`} />
         <meta name="author" content={siteSettings.site_author} />
         <meta name="language" content="id" />
@@ -365,14 +413,12 @@ export default function AnimeDetailPage() {
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="theme-color" content="#000000" />
         
-        {/* Schema.org JSON-LD structured data */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: generateJsonLd() }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: generateWebsiteJsonLd() }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: generateBreadcrumbJsonLd() }} />
       </Head>
 
       <div className="container mx-auto py-6 px-4 md:px-6 mt-20">
-        {/* Enhanced Breadcrumbs for SEO with Indonesian localization */}
         <nav aria-label="Breadcrumb" className="mb-6">
           <ol className="flex items-center space-x-2 text-sm text-gray-400">
             <li>
@@ -399,7 +445,6 @@ export default function AnimeDetailPage() {
         </nav>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Left Column */}
           <div className="md:col-span-1">
             <div className="relative rounded-lg overflow-hidden h-96 md:h-auto w-full mb-6 shadow-lg hover:scale-105 transition-all duration-300 mt-10 md:mt-0">
               {isExternalImage(anime.banner) ? (
@@ -450,7 +495,6 @@ export default function AnimeDetailPage() {
                 </div>
               </div>
               
-              {/* Indonesian-specific sharing options */}
               <div className="pt-4">
                 <Button 
                   variant="outline" 
@@ -465,7 +509,6 @@ export default function AnimeDetailPage() {
             </div>
           </div>
 
-          {/* Right Column */}
           <div className="md:col-span-2">
             <header>
               <h1 className="text-3xl md:text-4xl font-bold text-white mb-4" id="anime-title">{anime.title}</h1>
@@ -514,33 +557,65 @@ export default function AnimeDetailPage() {
             </Tabs>
           </div>
         </div>
-
-        {/* Modal for Video */}
+        <Advertisement />
+        {/* Netflix-style Video Modal */}
         {isModalOpen && currentVideo && (
           <div className="fixed inset-0 bg-black bg-opacity-90 flex justify-center items-center z-50">
-            <div className="relative w-full max-w-5xl h-full max-h-[90vh]">
+            <div className={`relative ${isFullscreen ? 'w-full h-full' : 'w-full max-w-5xl h-full max-h-[90vh]'} rounded-lg overflow-hidden`}>
+              {isIframeLoading && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
+                </div>
+              )}
+              
               <button 
                 className="absolute top-4 right-4 p-2 text-white bg-black/70 rounded-full hover:bg-black/90 transition-colors z-10"
                 onClick={handleCloseModal}
                 aria-label="Tutup pemutar video"
               >
-                <span className="sr-only">Tutup</span>
-                X
+                <X size={24} />
               </button>
+              
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4 z-10">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <button 
+                      className="text-white hover:text-gray-300 transition-colors"
+                      onClick={toggleFullscreen}
+                      aria-label="Toggle fullscreen"
+                    >
+                      {isFullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
+                    </button>
+                    <button 
+                      className="text-white hover:text-gray-300 transition-colors"
+                      onClick={toggleMute}
+                      aria-label="Toggle mute"
+                    >
+                      {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+                    </button>
+                  </div>
+                  <div className="text-white text-sm">
+                    {anime.title} - {currentEpisodeTitle}
+                  </div>
+                </div>
+              </div>
+              
               <iframe 
                 src={currentVideo} 
-                title={`Tonton ${anime.title} episode - Subtitle Indonesia`}
+                title={`Tonton ${anime.title} - Subtitle Indonesia`}
                 width="100%" 
                 height="100%" 
                 frameBorder="0" 
-                allowFullScreen 
-                loading="lazy"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowFullScreen
+                className="absolute inset-0 w-full h-full"
+                onLoad={() => setIsIframeLoading(false)}
               />
             </div>
           </div>
         )}
-        
-        {/* Indonesia-specific fast loading recommendation section */}
+        <Advertisement />
+        <Advertisement />
         <section className="mt-16 bg-black/30 p-6 rounded-lg">
           <h2 className="text-xl font-bold mb-4">Tips Nonton Lancar</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
@@ -559,7 +634,6 @@ export default function AnimeDetailPage() {
   );
 }
 
-// Reusable Component with enhanced accessibility
 function AnimeInfoRow({ icon, text, label }: { icon: React.ReactNode; text: string; label: string }) {
   return (
     <div className="flex items-center gap-2" aria-label={label}>
@@ -575,7 +649,7 @@ function EpisodeCard({
   animeTitle 
 }: { 
   episode: Episode; 
-  onOpenModal: (url: string) => void;
+  onOpenModal: (url: string, title: string) => void;
   animeTitle: string;
 }) {
   const episodeUrl = `/watch/${animeTitle.toLowerCase().replace(/\s+/g, '-')}-episode-${episode.Number}`;
@@ -594,18 +668,10 @@ function EpisodeCard({
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={() => onOpenModal(episode.Link)}
+          onClick={() => onOpenModal(episode.Link, episode.Title)}
           aria-label={`Tonton ${episode.Title} subtitle Indonesia`}
         >
           Tonton Episode
-        </Button>
-        <Button 
-          variant="secondary" 
-          size="sm" 
-          onClick={() => onOpenModal(episode.Link)}
-          aria-label={`Streaming ${episode.Title} sub Indo`}
-        >
-          Streaming
         </Button>
       </div>
     </article>
