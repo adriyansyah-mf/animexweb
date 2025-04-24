@@ -512,6 +512,8 @@ export default function AnimeDetailPage() {
           <div className="md:col-span-2">
             <header>
               <h1 className="text-3xl md:text-4xl font-bold text-white mb-4" id="anime-title">{anime.title}</h1>
+              <title>{`Tonton ${anime.title} - Subtitle Indonesia | Otaku Stream`}</title>
+              <meta name="description">{`Nonton dan Stream ${anime.title} Sub Indo resolusi 360p 720p 1080p 4k lengkap subtitle indonesia`}</meta>
               <div className="mb-4">
                 <h2 className="sr-only">Judul Alternatif</h2>
                 <p className="text-gray-300 text-sm">{anime.title} Sub Indo</p>
