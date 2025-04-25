@@ -274,8 +274,16 @@ const HomeContent = () => {
         </div>
         
         {renderAnimeSection("Ongoing Anime", ongoingAnimes)}
+        {/* Ad container above Ongoing Anime section */}
+        <div className="w-full flex justify-center my-8">
+          <div ref={adRef} className="ad-container"></div>
+        </div>
         {renderAnimeSection("Completed Anime", completedAnimes)}
 
+        {/* Ad container above Ongoing Anime section */}
+        <div className="w-full flex justify-center my-8">
+          <div ref={adRef} className="ad-container"></div>
+        </div>
         <h2 className="text-2xl font-bold text-white mb-6">
           {selectedGenre ? `${selectedGenre} Anime` : "All Anime"}
         </h2>
