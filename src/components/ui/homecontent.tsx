@@ -68,26 +68,12 @@ const AnimeCard = ({ anime, index, title = "", selectedGenre, handleGenreClick, 
   );
 };
 
-const HomeContent = () => {
-  const [animes, setAnimes] = useState<any[]>([]);
-  const [newestAnimes, setNewestAnimes] = useState<any[]>([]);
-  const [ongoingAnimes, setOngoingAnimes] = useState<any[]>([]);
-  const [completedAnimes, setCompletedAnimes] = useState<any[]>([]);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [loading, setLoading] = useState(false);
-  const [search, setSearch] = useState("");
-  const [selectedGenre, setSelectedGenre] = useState("");
-  const observer = useRef<IntersectionObserver | null>(null);
-  const loaderRef = useRef<HTMLDivElement>(null);
-  const topRef = useRef<HTMLDivElement>(null);
-  
-  // Ref for the ad container
+// AdContainer component to reuse for all ad placements
+const AdContainer = ({ id }: { id: string }) => {
   const adRef = useRef<HTMLDivElement>(null);
 
-  // Effect to initialize ads
   useEffect(() => {
-    // This will run when the component mounts and create the ad script
+    // Create the ad scripts
     const script1 = document.createElement('script');
     script1.type = 'text/javascript';
     script1.text = `atOptions = { 'key' : 'b03053da9f4dbc17385dc7f77f3a436a', 'format' : 'iframe', 'height' : 90, 'width' : 728, 'params' : {} };`;
@@ -102,7 +88,7 @@ const HomeContent = () => {
       adRef.current.appendChild(script2);
     }
     
-    // Cleanup function to remove scripts when component unmounts
+    // Cleanup function
     return () => {
       if (adRef.current) {
         while (adRef.current.firstChild) {
@@ -111,6 +97,27 @@ const HomeContent = () => {
       }
     };
   }, []);
+
+  return (
+    <div className="w-full flex justify-center my-8">
+      <div ref={adRef} id={id} className="ad-container"></div>
+    </div>
+  );
+};
+
+const HomeContent = () => {
+  const [animes, setAnimes] = useState<any[]>([]);
+  const [newestAnimes, setNewestAnimes] = useState<any[]>([]);
+  const [ongoingAnimes, setOngoingAnimes] = useState<any[]>([]);
+  const [completedAnimes, setCompletedAnimes] = useState<any[]>([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState("");
+  const [selectedGenre, setSelectedGenre] = useState("");
+  const observer = useRef<IntersectionObserver | null>(null);
+  const loaderRef = useRef<HTMLDivElement>(null);
+  const topRef = useRef<HTMLDivElement>(null);
 
   const fetchAnimes = async (currentPage: number, searchQuery = "", genreFilter = "") => {
     try {
@@ -266,38 +273,51 @@ const HomeContent = () => {
     <>
       <GlassmorphismNavbar navItems={[]} onSearch={(q) => setSearch(q)} />
       <div ref={topRef} className="container mx-auto py-10 px-4">
+        {/* Ad at the top of the page */}
+        <AdContainer id="ad-top" />
+        
         {renderAnimeSection("Newest Anime", newestAnimes)}
         
-        {/* Ad container above Ongoing Anime section */}
-        <div className="w-full flex justify-center my-8">
-          <div ref={adRef} className="ad-container"></div>
-        </div>
+        {/* Ad after Newest Anime section */}
+        <AdContainer id="ad-after-newest" />
         
         {renderAnimeSection("Ongoing Anime", ongoingAnimes)}
-        {/* Ad container above Ongoing Anime section */}
-        <div className="w-full flex justify-center my-8">
-          <div ref={adRef} className="ad-container"></div>
-        </div>
+        
+        {/* Ad after Ongoing Anime section */}
+        <AdContainer id="ad-after-ongoing" />
+        
         {renderAnimeSection("Completed Anime", completedAnimes)}
+        
+        {/* Ad after Completed Anime section */}
+        <AdContainer id="ad-after-completed" />
 
-        {/* Ad container above Ongoing Anime section */}
-        <div className="w-full flex justify-center my-8">
-          <div ref={adRef} className="ad-container"></div>
-        </div>
         <h2 className="text-2xl font-bold text-white mb-6">
           {selectedGenre ? `${selectedGenre} Anime` : "All Anime"}
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-          {animes.map((anime, index) => (
-            <AnimeCard
-              key={`all-${anime.id}-${index}`}
-              anime={anime}
-              index={index}
-              selectedGenre={selectedGenre}
-              handleGenreClick={handleGenreClick}
-              convertToSlug={convertToSlug}
-            />
-          ))}
+          {animes.map((anime, index) => {
+            // Insert ad after every 10 anime cards in the main list
+            const adAfterItems = index > 0 && (index + 1) % 10 === 0;
+            
+            return (
+              <>
+                <AnimeCard
+                  key={`all-${anime.id}-${index}`}
+                  anime={anime}
+                  index={index}
+                  selectedGenre={selectedGenre}
+                  handleGenreClick={handleGenreClick}
+                  convertToSlug={convertToSlug}
+                />
+                
+                {adAfterItems && (
+                  <div className="col-span-full my-6">
+                    <AdContainer id={`ad-in-list-${Math.floor(index/10)}`} />
+                  </div>
+                )}
+              </>
+            );
+          })}
         </div>
 
         <div ref={loaderRef} className="col-span-full flex justify-center mt-10">
@@ -311,6 +331,9 @@ const HomeContent = () => {
             <div className="text-gray-500 text-sm">No more anime to load.</div>
           )}
         </div>
+        
+        {/* Ad at the bottom of the page */}
+        <AdContainer id="ad-bottom" />
       </div>
 
       {selectedGenre && (
