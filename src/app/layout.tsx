@@ -14,7 +14,7 @@ import { GoogleAnalytics } from '@next/third-parties/google';
 const inter = Inter({ subsets: ["latin"] });
 
 const navItems = [
-  { label: "List Anime", href: "/anime/lists" },
+  { label: "LIST ANIME", href: "/anime/lists" },
 ];
 
 export default function RootLayout({
@@ -23,9 +23,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const [metadata, setMetadata] = useState({
-    title: "Loading...",
-    description: "Fetching metadata from API...",
-    keywords: "",
+    title: "Otakustream",
+    description: "Nonton Anime Lengkap Full HD di Otakustream",
+    keywords: "Nonton Anime Lengkap Full HD di Otakustream",
     robots: "index, follow",
     siteName: "Otakustream", // default
   });

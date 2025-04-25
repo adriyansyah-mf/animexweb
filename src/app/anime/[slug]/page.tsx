@@ -512,9 +512,6 @@ export default function AnimeDetailPage() {
           <div className="md:col-span-2">
             <header>
               <h1 className="text-3xl md:text-4xl font-bold text-white mb-4" id="anime-title">{anime.title}</h1>
-              {/* Fixed: removed content as children from meta tags */}
-              <title>{`Tonton ${anime.title} - Subtitle Indonesia | Otaku Stream`}</title>
-              <meta name="description" content={`Nonton dan Stream ${anime.title} Sub Indo resolusi 360p 720p 1080p 4k lengkap subtitle indonesia`} />
               <div className="mb-4">
                 <h2 className="sr-only">Judul Alternatif</h2>
                 <p className="text-gray-300 text-sm">{anime.title} Sub Indo</p>
@@ -655,15 +652,27 @@ function EpisodeCard({
   onOpenModal: (url: string, title: string) => void;
   animeTitle: string;
 }) {
+  // Generate a URL for the episode (used for navigation history)
   const episodeUrl = `/watch/${animeTitle.toLowerCase().replace(/\s+/g, '-')}-episode-${episode.Number}`;
+  
+  // Function to handle title click - now opens modal instead of navigating
+  const handleTitleClick = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent default navigation behavior
+    onOpenModal(episode.Link, episode.Title);
+  };
   
   return (
     <article className="bg-black/40 p-4 rounded-lg backdrop-blur-lg hover:bg-black/50 transition-colors">
       <div className="flex justify-between items-center">
         <h3 className="font-medium text-lg text-white">
-          <Link href={episodeUrl} className="hover:text-gray-300 transition-colors">
+          {/* Modified Link to use onClick instead of href navigation */}
+          <a 
+            href={episodeUrl} 
+            onClick={handleTitleClick}
+            className="hover:text-gray-300 transition-colors cursor-pointer"
+          >
             {episode.Title}
-          </Link>
+          </a>
         </h3>
         <time dateTime={episode.Date} className="text-sm text-gray-400">{episode.Date}</time>
       </div>
