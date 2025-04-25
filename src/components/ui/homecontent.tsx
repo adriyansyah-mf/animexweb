@@ -4,7 +4,6 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import GlassmorphismNavbar from "@/components/ui/navbar";
-import Script from "next/script";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 40 },
@@ -31,12 +30,13 @@ interface AnimeCardProps {
 const AnimeCard = ({ anime, index, title = "", selectedGenre, handleGenreClick, convertToSlug }: AnimeCardProps) => {
   return (
     <motion.div
-      className="bg-white/10 backdrop-blur-md rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow duration-300 text-white"
+      className="bg-white/10 backdrop-blur-md rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow duration-300 text-white flex-shrink-0"
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.2 }}
       variants={fadeInUp}
       transition={{ duration: 0.4, delay: index * 0.05 }}
+      style={{ width: title ? "280px" : "100%" }} // Fixed width for scrollable sections
     >
       <img
         src={anime.banner}
@@ -157,7 +157,7 @@ const HomeContent = () => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       const response = await fetch(
-        `${apiUrl}/user/list-anime?page=1&per_page=5`,
+        `${apiUrl}/user/list-anime?page=1&per_page=10`,
         {
           headers: { accept: "application/json" },
         }
@@ -174,7 +174,7 @@ const HomeContent = () => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       const response = await fetch(
-        `${apiUrl}/user/list-anime?page=1&per_page=5&status=Ongoing`,
+        `${apiUrl}/user/list-anime?page=1&per_page=10&status=Ongoing`,
         {
           headers: { accept: "application/json" },
         }
@@ -191,7 +191,7 @@ const HomeContent = () => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       const response = await fetch(
-        `${apiUrl}/user/list-anime?page=1&per_page=5&status=Completed`,
+        `${apiUrl}/user/list-anime?page=1&per_page=10&status=Completed`,
         {
           headers: { accept: "application/json" },
         }
@@ -246,13 +246,37 @@ const HomeContent = () => {
     topRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const renderAnimeSection = (title: string, animes: any[]) => {
+  const renderScrollableAnimeSection = (title: string, animes: any[]) => {
     if (animes.length === 0) return null;
 
     return (
       <div className="mb-12">
-        <h2 className="text-2xl font-bold text-white mb-6">{title}</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-white">{title}</h2>
+          <div className="flex gap-2">
+            <button className="scroll-button-left text-white bg-blue-500 hover:bg-blue-600 rounded-full w-8 h-8 flex items-center justify-center shadow-md"
+              onClick={(e) => {
+                const container = e.currentTarget.parentElement?.parentElement?.nextElementSibling;
+                if (container) {
+                  container.scrollBy({ left: -600, behavior: 'smooth' });
+                }
+              }}
+            >
+              ←
+            </button>
+            <button className="scroll-button-right text-white bg-blue-500 hover:bg-blue-600 rounded-full w-8 h-8 flex items-center justify-center shadow-md"
+              onClick={(e) => {
+                const container = e.currentTarget.parentElement?.parentElement?.nextElementSibling;
+                if (container) {
+                  container.scrollBy({ left: 600, behavior: 'smooth' });
+                }
+              }}
+            >
+              →
+            </button>
+          </div>
+        </div>
+        <div className="flex overflow-x-auto pb-4 gap-4 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {animes.map((anime, index) => (
             <AnimeCard
               key={`${title}-${anime.id}-${index}`}
@@ -276,21 +300,23 @@ const HomeContent = () => {
         {/* Ad at the top of the page */}
         <AdContainer id="ad-top" />
         
-        {renderAnimeSection("Newest Anime", newestAnimes)}
+        {/* Scrollable sections */}
+        {renderScrollableAnimeSection("Newest Anime", newestAnimes)}
         
         {/* Ad after Newest Anime section */}
         <AdContainer id="ad-after-newest" />
         
-        {renderAnimeSection("Ongoing Anime", ongoingAnimes)}
+        {renderScrollableAnimeSection("Ongoing Anime", ongoingAnimes)}
         
         {/* Ad after Ongoing Anime section */}
         <AdContainer id="ad-after-ongoing" />
         
-        {renderAnimeSection("Completed Anime", completedAnimes)}
+        {renderScrollableAnimeSection("Completed Anime", completedAnimes)}
         
         {/* Ad after Completed Anime section */}
         <AdContainer id="ad-after-completed" />
 
+        {/* All Anime Grid Section */}
         <h2 className="text-2xl font-bold text-white mb-6">
           {selectedGenre ? `${selectedGenre} Anime` : "All Anime"}
         </h2>
@@ -335,6 +361,13 @@ const HomeContent = () => {
         {/* Ad at the bottom of the page */}
         <AdContainer id="ad-bottom" />
       </div>
+
+      {/* CSS for hiding scrollbar */}
+      <style jsx global>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
 
       {selectedGenre && (
         <button
