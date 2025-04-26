@@ -401,6 +401,7 @@ export default function AnimeDetailPage() {
         <meta name="twitter:image" content={anime.banner} />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:site" content="@yoursitename" />
+
         
         <meta name="robots" content={`${siteSettings.meta_robots || "index, follow"}, max-image-preview:large`} />
         <meta name="author" content={siteSettings.site_author} />
