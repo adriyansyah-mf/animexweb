@@ -48,7 +48,7 @@ export default function RootLayout({
         setMetadata({
           title: data.meta_title || "Default Title",
           description: data.meta_description || "Default Description",
-          keywords: data.site_keywords || "",
+          keywords: data.site_keywords || "Nonton Anime Sub Indo",
           robots: data.meta_robots || "index, follow",
           siteName: data.site_name || "Otakustream", // masukin siteName dari API
         });
@@ -57,7 +57,7 @@ export default function RootLayout({
         setMetadata({
           title: "Otakustream",
           description: "Nonton Anime Full Subtitle Indonesia Ultra HD",
-          keywords: "",
+          keywords: "Nonton Anime Sub Indo",
           robots: "index, follow",
           siteName: "Otakustream",
         });
@@ -129,7 +129,7 @@ export default function RootLayout({
           <div className="flex-grow pb-20"> {/* Flex-grow ensures the content fills available space */}
             {pathname === "/" && anime && <Banner anime={anime} />}
             {pathname === "/" && hasScrolled && <HomeContent />}
-            <ThemeProvider defaultTheme="dark" storageKey="dark">
+            <ThemeProvider defaultTheme="system" storageKey="system">
               {children}
             </ThemeProvider>
           </div>

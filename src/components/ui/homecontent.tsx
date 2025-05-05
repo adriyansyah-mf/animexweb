@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import GlassmorphismNavbar from "@/components/ui/navbar";
@@ -30,39 +30,82 @@ interface AnimeCardProps {
 const AnimeCard = ({ anime, index, title = "", selectedGenre, handleGenreClick, convertToSlug }: AnimeCardProps) => {
   return (
     <motion.div
-      className="bg-white/10 backdrop-blur-md rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow duration-300 text-white flex-shrink-0"
+      className="group relative bg-[#1A242F] rounded-md overflow-hidden hover:z-20 transition-all duration-300 flex-shrink-0 transform hover:scale-150 hover:shadow-2xl"
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.2 }}
       variants={fadeInUp}
       transition={{ duration: 0.4, delay: index * 0.05 }}
-      style={{ width: title ? "280px" : "100%" }} // Fixed width for scrollable sections
+      style={{ width: title ? "280px" : "100%" }}
     >
-      <img
-        src={anime.banner}
-        alt={anime.title}
-        className="w-full h-60 object-cover rounded-lg mb-3"
-      />
-      <Link href={`/anime/${convertToSlug(anime.title)}-${anime.id}`}>
-        <h3 className="text-lg font-bold line-clamp-2 cursor-pointer">
-          {anime.title}
-        </h3>
-      </Link>
-      <p className="text-sm text-gray-400">{anime.released_year}</p>
-      <div className="mt-2 flex flex-wrap gap-2">
-        {anime.genres.map((genre: string) => (
-          <button
-            key={`${anime.id}-${genre}`}
-            className={`text-xs px-2 py-1 rounded-full border ${
-              selectedGenre === genre
-                ? "bg-[#2F88FF] text-white border-[#2F88FF]"
-                : "bg-[#2F88FF]/20 text-white border-[#2F88FF] hover:bg-[#2F88FF]/40"
-            }`}
-            onClick={() => handleGenreClick(genre)}
-          >
-            {genre}
-          </button>
-        ))}
+      {/* Card Image Container */}
+      <div className="relative pb-[150%]">
+        <img
+          src={anime.banner}
+          alt={anime.title}
+          className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+        />
+        
+        {/* Multiple Gradient Overlays */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="absolute inset-0 bg-gradient-to-l from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        
+        {/* Content Container */}
+        <div className="absolute inset-0 p-4 flex flex-col justify-end transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+          {/* Play Button with Gradient Background */}
+          <Link href={`/anime/${convertToSlug(anime.title)}-${anime.id}`}>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-[#00A8E1] to-[#0096C7] rounded-full blur-md opacity-50"></div>
+                <button className="relative bg-white text-black p-4 rounded-full hover:bg-white/90 transition-colors duration-200">
+                  <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </Link>
+
+          {/* Bottom Content */}
+          <div className="relative">
+            {/* Title and Year */}
+            <div className="mb-3">
+              <Link href={`/anime/${convertToSlug(anime.title)}-${anime.id}`}>
+                <h3 className="text-lg font-bold text-white line-clamp-2 mb-1 group-hover:text-[#00A8E1] transition-colors duration-300 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] [text-shadow:_0_1px_0_rgb(0_0_0_/_40%)]">
+                  {anime.title}
+                </h3>
+              </Link>
+              <div className="flex items-center gap-2 text-sm text-gray-200 drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
+                <span>{anime.released_year}</span>
+                <span className="w-1 h-1 bg-gray-200 rounded-full"></span>
+                <span className="border border-gray-200 px-1 rounded">HD</span>
+              </div>
+            </div>
+
+            {/* Genres with Gradient Background */}
+            <div className="flex flex-wrap gap-2">
+              {anime.genres.map((genre: string) => (
+                <button
+                  key={`${anime.id}-${genre}`}
+                  className={`text-xs px-2 py-1 rounded-full border transition-all duration-200 relative overflow-hidden ${
+                    selectedGenre === genre
+                      ? "bg-[#00A8E1] text-white border-[#00A8E1] scale-110"
+                      : "bg-[#00A8E1]/20 text-white border-[#00A8E1] hover:bg-[#00A8E1]/40 hover:scale-105"
+                  }`}
+                  onClick={() => handleGenreClick(genre)}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#00A8E1]/20 to-[#0096C7]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <span className="relative z-10">{genre}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Enhanced Bottom Gradient */}
+          <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-black via-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        </div>
       </div>
     </motion.div>
   );
@@ -231,10 +274,16 @@ const HomeContent = () => {
     if (observer.current) observer.current.disconnect();
 
     observer.current = new IntersectionObserver(handleObserver, {
-      rootMargin: "200px",
+      root: null,
+      rootMargin: "100px",
+      threshold: 0.1,
     });
 
     if (loaderRef.current) observer.current.observe(loaderRef.current);
+
+    return () => {
+      if (observer.current) observer.current.disconnect();
+    };
   }, [handleObserver]);
 
   const convertToSlug = (text: string) => {
@@ -250,11 +299,15 @@ const HomeContent = () => {
     if (animes.length === 0) return null;
 
     return (
-      <div className="mb-12">
+      <div className="mb-16">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-white">{title}</h2>
+          <h2 className="text-2xl font-bold text-white flex items-center">
+            <span className="bg-[#00A8E1] w-1 h-6 mr-3 rounded-full"></span>
+            {title}
+          </h2>
           <div className="flex gap-2">
-            <button className="scroll-button-left text-white bg-blue-500 hover:bg-blue-600 rounded-full w-8 h-8 flex items-center justify-center shadow-md"
+            <button 
+              className="scroll-button-left text-white bg-[#1A242F] hover:bg-[#2A3441] rounded-full w-10 h-10 flex items-center justify-center shadow-lg transition-colors duration-200"
               onClick={(e) => {
                 const container = e.currentTarget.parentElement?.parentElement?.nextElementSibling;
                 if (container) {
@@ -262,9 +315,12 @@ const HomeContent = () => {
                 }
               }}
             >
-              ←
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+              </svg>
             </button>
-            <button className="scroll-button-right text-white bg-blue-500 hover:bg-blue-600 rounded-full w-8 h-8 flex items-center justify-center shadow-md"
+            <button 
+              className="scroll-button-right text-white bg-[#1A242F] hover:bg-[#2A3441] rounded-full w-10 h-10 flex items-center justify-center shadow-lg transition-colors duration-200"
               onClick={(e) => {
                 const container = e.currentTarget.parentElement?.parentElement?.nextElementSibling;
                 if (container) {
@@ -272,11 +328,13 @@ const HomeContent = () => {
                 }
               }}
             >
-              →
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+              </svg>
             </button>
           </div>
         </div>
-        <div className="flex overflow-x-auto pb-4 gap-4 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <div className="flex overflow-x-auto pb-6 gap-6 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {animes.map((anime, index) => (
             <AnimeCard
               key={`${title}-${anime.id}-${index}`}
@@ -317,45 +375,49 @@ const HomeContent = () => {
         <AdContainer id="ad-after-completed" />
 
         {/* All Anime Grid Section */}
-        <h2 className="text-2xl font-bold text-white mb-6">
-          {selectedGenre ? `${selectedGenre} Anime` : "All Anime"}
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-          {animes.map((anime, index) => {
-            // Insert ad after every 10 anime cards in the main list
-            const adAfterItems = index > 0 && (index + 1) % 10 === 0;
-            
-            return (
-              <>
-                <AnimeCard
-                  key={`all-${anime.id}-${index}`}
-                  anime={anime}
-                  index={index}
-                  selectedGenre={selectedGenre}
-                  handleGenreClick={handleGenreClick}
-                  convertToSlug={convertToSlug}
-                />
-                
-                {adAfterItems && (
-                  <div className="col-span-full my-6">
-                    <AdContainer id={`ad-in-list-${Math.floor(index/10)}`} />
-                  </div>
-                )}
-              </>
-            );
-          })}
-        </div>
+        <div className="mb-16">
+          <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
+            <span className="bg-[#00A8E1] w-1 h-6 mr-3 rounded-full"></span>
+            {selectedGenre ? `${selectedGenre} Anime` : "All Anime"}
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+            {animes.map((anime, index) => {
+              const adAfterItems = index > 0 && (index + 1) % 10 === 0;
+              
+              return (
+                <React.Fragment key={`all-${anime.id}-${index}`}>
+                  <AnimeCard
+                    anime={anime}
+                    index={index}
+                    selectedGenre={selectedGenre}
+                    handleGenreClick={handleGenreClick}
+                    convertToSlug={convertToSlug}
+                  />
+                  
+                  {adAfterItems && (
+                    <div className="col-span-full my-6">
+                      <AdContainer id={`ad-in-list-${Math.floor(index/10)}`} />
+                    </div>
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </div>
 
-        <div ref={loaderRef} className="col-span-full flex justify-center mt-10">
-          {loading && (
-            <div className="flex flex-col items-center text-gray-400 text-sm animate-pulse">
-              <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500 mb-3"></div>
-              <span>Loading more anime...</span>
-            </div>
-          )}
-          {!hasMore && (
-            <div className="text-gray-500 text-sm">No more anime to load.</div>
-          )}
+          {/* Loading indicator and observer target */}
+          <div ref={loaderRef} className="w-full h-20 flex items-center justify-center">
+            {loading && (
+              <div className="flex flex-col items-center text-gray-400 text-sm">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#00A8E1] mb-3"></div>
+                <span>Loading more anime...</span>
+              </div>
+            )}
+            {!loading && !hasMore && animes.length > 0 && (
+              <div className="text-center text-gray-500 text-sm">
+                No more anime to load.
+              </div>
+            )}
+          </div>
         </div>
         
         {/* Ad at the bottom of the page */}
@@ -370,15 +432,19 @@ const HomeContent = () => {
       `}</style>
 
       {selectedGenre && (
-        <button
+        <motion.button
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
           onClick={() => {
             setSelectedGenre("");
             topRef.current?.scrollIntoView({ behavior: "smooth" });
           }}
-          className="fixed top-20 right-4 bg-red-500 text-white px-3 py-1 rounded-full shadow-lg hover:bg-red-600 transition text-xs z-50"
+          className="fixed top-20 right-4 bg-[#00A8E1] text-white px-4 py-2 rounded-full shadow-lg hover:bg-[#0096C7] transition-colors duration-200 text-sm font-medium z-50 flex items-center gap-2"
         >
-          ✕ {selectedGenre}
-        </button>
+          <span>✕</span>
+          <span>{selectedGenre}</span>
+        </motion.button>
       )}
     </>
   );

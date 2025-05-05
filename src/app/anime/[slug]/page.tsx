@@ -69,6 +69,9 @@ export default function AnimeDetailPage() {
   const [canonicalUrl, setCanonicalUrl] = useState("");
   const [browserLanguage, setBrowserLanguage] = useState("id-ID");
   const [isIndonesia, setIsIndonesia] = useState(true);
+  const [lastWatchedEpisode, setLastWatchedEpisode] = useState<string | null>(null);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
 
   useEffect(() => {
     // Detect language and region for targeted SEO
@@ -156,6 +159,25 @@ export default function AnimeDetailPage() {
       if (e.key === 'm' && isModalOpen) {
         toggleMute();
       }
+      if (e.key === 'ArrowRight' && isModalOpen && anime) {
+        // Find and play next episode
+        const currentIndex = anime.episodes.findIndex(ep => ep.Link === currentVideo);
+        if (currentIndex !== undefined && currentIndex < anime.episodes.length - 1) {
+          const nextEpisode = anime.episodes[currentIndex + 1];
+          handleOpenModal(nextEpisode.Link, nextEpisode.Title);
+        }
+      }
+      if (e.key === 'ArrowLeft' && isModalOpen && anime) {
+        // Find and play previous episode
+        const currentIndex = anime.episodes.findIndex(ep => ep.Link === currentVideo);
+        if (currentIndex !== undefined && currentIndex > 0) {
+          const prevEpisode = anime.episodes[currentIndex - 1];
+          handleOpenModal(prevEpisode.Link, prevEpisode.Title);
+        }
+      }
+      if (e.key === '?' && isModalOpen) {
+        setShowKeyboardShortcuts(true);
+      }
     };
 
     const handlePopState = () => {
@@ -171,10 +193,15 @@ export default function AnimeDetailPage() {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('popstate', handlePopState);
     };
-  }, [isModalOpen]);
+  }, [isModalOpen, currentVideo, anime]);
 
   const handleOpenModal = (videoUrl: string, episodeTitle: string) => {
-    setCurrentVideo(videoUrl);
+    // Add autoplay parameter to the video URL
+    const autoplayUrl = videoUrl.includes('?') 
+      ? `${videoUrl}&autoplay=1&mute=0` 
+      : `${videoUrl}?autoplay=1&mute=0`;
+    
+    setCurrentVideo(autoplayUrl);
     setCurrentEpisodeTitle(episodeTitle);
     setIsModalOpen(true);
     setIsIframeLoading(true);
@@ -195,7 +222,7 @@ export default function AnimeDetailPage() {
       window.history.back();
     }
   };
-
+   
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch(err => {
@@ -361,6 +388,43 @@ export default function AnimeDetailPage() {
 
     return JSON.stringify(jsonLd);
   };
+
+  // Add keyboard shortcuts help modal
+  const KeyboardShortcutsHelp = () => (
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+      <div className="bg-black/90 p-6 rounded-lg max-w-md w-full">
+        <h3 className="text-xl font-bold mb-4">Keyboard Shortcuts</h3>
+        <div className="space-y-2">
+          <div className="flex justify-between">
+            <span>Close modal</span>
+            <kbd className="px-2 py-1 bg-gray-800 rounded">Esc</kbd>
+          </div>
+          <div className="flex justify-between">
+            <span>Toggle fullscreen</span>
+            <kbd className="px-2 py-1 bg-gray-800 rounded">F</kbd>
+          </div>
+          <div className="flex justify-between">
+            <span>Toggle mute</span>
+            <kbd className="px-2 py-1 bg-gray-800 rounded">M</kbd>
+          </div>
+          <div className="flex justify-between">
+            <span>Next episode</span>
+            <kbd className="px-2 py-1 bg-gray-800 rounded">→</kbd>
+          </div>
+          <div className="flex justify-between">
+            <span>Previous episode</span>
+            <kbd className="px-2 py-1 bg-gray-800 rounded">←</kbd>
+          </div>
+        </div>
+        <button 
+          className="mt-4 w-full bg-primary text-white py-2 rounded hover:bg-primary/90"
+          onClick={() => setShowKeyboardShortcuts(false)}
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  );
 
   if (loading || !siteSettings) return <LoadingSkeleton />;
 
@@ -569,13 +633,22 @@ export default function AnimeDetailPage() {
                 </div>
               )}
               
-              <button 
-                className="absolute top-4 right-4 p-2 text-white bg-black/70 rounded-full hover:bg-black/90 transition-colors z-10"
-                onClick={handleCloseModal}
-                aria-label="Tutup pemutar video"
-              >
-                <X size={24} />
-              </button>
+              <div className="absolute top-4 right-4 flex items-center space-x-2 z-10">
+                <button 
+                  className="p-2 text-white bg-black/70 rounded-full hover:bg-black/90 transition-colors"
+                  onClick={() => setShowKeyboardShortcuts(true)}
+                  aria-label="Show keyboard shortcuts"
+                >
+                  <span className="text-sm">?</span>
+                </button>
+                <button 
+                  className="p-2 text-white bg-black/70 rounded-full hover:bg-black/90 transition-colors"
+                  onClick={handleCloseModal}
+                  aria-label="Tutup pemutar video"
+                >
+                  <X size={24} />
+                </button>
+              </div>
               
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4 z-10">
                 <div className="flex items-center justify-between">
@@ -594,9 +667,43 @@ export default function AnimeDetailPage() {
                     >
                       {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
                     </button>
+                    <div className="text-white text-sm">
+                      {anime.title} - {currentEpisodeTitle}
+                    </div>
                   </div>
-                  <div className="text-white text-sm">
-                    {anime.title} - {currentEpisodeTitle}
+                  <div className="flex items-center space-x-2">
+                    <button 
+                      className="text-white hover:text-gray-300 transition-colors"
+                      onClick={() => {
+                        const currentIndex = anime?.episodes.findIndex(ep => ep.Link === currentVideo);
+                        if (currentIndex !== undefined && currentIndex > 0) {
+                          const prevEpisode = anime.episodes[currentIndex - 1];
+                          handleOpenModal(prevEpisode.Link, prevEpisode.Title);
+                        }
+                      }}
+                      disabled={anime?.episodes.findIndex(ep => ep.Link === currentVideo) === 0}
+                      aria-label="Previous episode"
+                    >
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                    <button 
+                      className="text-white hover:text-gray-300 transition-colors"
+                      onClick={() => {
+                        const currentIndex = anime?.episodes.findIndex(ep => ep.Link === currentVideo);
+                        if (currentIndex !== undefined && currentIndex < anime.episodes.length - 1) {
+                          const nextEpisode = anime.episodes[currentIndex + 1];
+                          handleOpenModal(nextEpisode.Link, nextEpisode.Title);
+                        }
+                      }}
+                      disabled={anime?.episodes.findIndex(ep => ep.Link === currentVideo) === anime.episodes.length - 1}
+                      aria-label="Next episode"
+                    >
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -615,6 +722,7 @@ export default function AnimeDetailPage() {
             </div>
           </div>
         )}
+        {showKeyboardShortcuts && <KeyboardShortcutsHelp />}
         <Advertisement />
         <Advertisement />
         <section className="mt-16 bg-black/30 p-6 rounded-lg">
@@ -657,6 +765,7 @@ function EpisodeCard({
   const episodeUrl = `/watch/${animeTitle.toLowerCase().replace(/\s+/g, '-')}-episode-${episode.Number}`;
   
   // Function to handle title click - now opens modal instead of navigating
+  
   const handleTitleClick = (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent default navigation behavior
     onOpenModal(episode.Link, episode.Title);
