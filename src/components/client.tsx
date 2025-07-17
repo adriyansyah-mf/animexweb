@@ -12,10 +12,11 @@ import { Calendar, Clock, FilmIcon, User, Home, Share2 } from "lucide-react";
 
 // Type definitions
 interface Episode {
-  Date: string;
-  Link: string;
-  Title: string;
-  Number: string;
+  url: string;
+  date: string;
+  title: string;
+  number: string;
+  video_url: string;
 }
 
 interface AnimeDetail {
@@ -314,7 +315,7 @@ export default function AnimeDetailClient({
                 <div className="space-y-3">
                   {anime.episodes.map((episode) => (
                     <EpisodeCard 
-                      key={episode.Number} 
+                      key={episode.number} 
                       episode={episode} 
                       onOpenModal={handleOpenModal} 
                       animeTitle={anime.title}
@@ -395,32 +396,32 @@ function EpisodeCard({
   onOpenModal: (url: string) => void;
   animeTitle: string;
 }) {
-  const episodeUrl = `/watch/${animeTitle.toLowerCase().replace(/\s+/g, '-')}-episode-${episode.Number}`;
+  const episodeUrl = `/watch/${animeTitle.toLowerCase().replace(/\s+/g, '-')}-episode-${episode.number}`;
   
   return (
     <article className="bg-black/40 p-4 rounded-lg backdrop-blur-lg hover:bg-black/50 transition-colors">
       <div className="flex justify-between items-center">
         <h3 className="font-medium text-lg text-white">
           <Link href={episodeUrl} className="hover:text-gray-300 transition-colors">
-            {episode.Title}
+            {episode.title}
           </Link>
         </h3>
-        <time dateTime={episode.Date} className="text-sm text-gray-400">{episode.Date}</time>
+        <time dateTime={episode.date} className="text-sm text-gray-400">{episode.date}</time>
       </div>
       <div className="mt-4 flex gap-3">
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={() => onOpenModal(episode.Link)}
-          aria-label={`Tonton ${episode.Title} subtitle Indonesia`}
+          onClick={() => onOpenModal(episode.video_url)}
+          aria-label={`Tonton ${episode.title} subtitle Indonesia`}
         >
           Tonton Episode
         </Button>
         <Button 
           variant="secondary" 
           size="sm" 
-          onClick={() => onOpenModal(episode.Link)}
-          aria-label={`Streaming ${episode.Title} sub Indo`}
+          onClick={() => onOpenModal(episode.video_url)}
+          aria-label={`Streaming ${episode.title} sub Indo`}
         >
           Streaming
         </Button>

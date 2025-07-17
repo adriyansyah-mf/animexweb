@@ -1,11 +1,27 @@
 import { Metadata } from "next";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/settings`, {
-    headers: { accept: "application/json" },
-    cache: "force-cache",
-  });
-  const meta = await res.json();
+  let meta = {
+    site_name: "Otakustream",
+    meta_robots: "index, follow",
+    site_keywords: "anime, streaming, sub indo",
+    site_author: "Otakustream Team",
+  };
+
+  try {
+    if (process.env.NEXT_PUBLIC_API_URL) {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/settings`, {
+        headers: { accept: "application/json" },
+        cache: "force-cache",
+      });
+      
+      if (res.ok) {
+        meta = await res.json();
+      }
+    }
+  } catch (error) {
+    console.log("Using fallback metadata for privacy page");
+  }
 
   return {
     title: `Kebijakan Privasi - ${meta.site_name}`,
@@ -17,12 +33,24 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function PrivacyPolicyPage() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/settings`, {
-    headers: { accept: "application/json" },
-    cache: "force-cache",
-  });
+  let meta = {
+    site_name: "Otakustream",
+  };
 
-  const meta = await res.json();
+  try {
+    if (process.env.NEXT_PUBLIC_API_URL) {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/settings`, {
+        headers: { accept: "application/json" },
+        cache: "force-cache",
+      });
+      
+      if (res.ok) {
+        meta = await res.json();
+      }
+    }
+  } catch (error) {
+    console.log("Using fallback data for privacy page");
+  }
 
   return (
     <main className="max-w-3xl mx-auto px-4 py-10 mt-40">

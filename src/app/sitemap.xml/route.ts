@@ -27,16 +27,23 @@ function toSlug(text: string) {
 export async function GET() {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://otakustream.xyz";
 
-  const animeRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user/list-anime?page=1&per_page=500`, {
-    headers: { accept: "application/json" },
-  });
+  let animeList: any[] = [];
 
-  if (!animeRes.ok) {
-    return new NextResponse("Failed to fetch anime data", { status: 500 });
+  try {
+    if (process.env.NEXT_PUBLIC_API_URL) {
+      const animeRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user/list-anime?page=1&per_page=500`, {
+        headers: { accept: "application/json" },
+      });
+
+      if (animeRes.ok) {
+        const data = await animeRes.json();
+        animeList = data.data || [];
+      }
+    }
+  } catch (error) {
+    console.log("Using empty sitemap - API not available during build");
+    animeList = [];
   }
-
-  const data = await animeRes.json();
-  const animeList = data.data;
 
   const animeUrls = animeList.map((anime: any) => {
     const slug = `${toSlug(anime.title || "unknown")}-${anime.id}`; // <-- Tambah ID

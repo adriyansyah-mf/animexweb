@@ -14,7 +14,9 @@ import { GoogleAnalytics } from '@next/third-parties/google';
 const inter = Inter({ subsets: ["latin"] });
 
 const navItems = [
+  { label: "HOME", href: "/" },
   { label: "LIST ANIME", href: "/anime/lists" },
+  { label: "CONTACT", href: "/contact" },
 ];
 
 export default function RootLayout({

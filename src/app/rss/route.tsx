@@ -47,17 +47,28 @@ interface ApiResponse {
 async function fetchRecentAnime(limit: number = 100): Promise<AnimeData[]> {
   const baseApiUrl = process.env.NEXT_PUBLIC_API_URL;
   
-  // Fetch recent anime with sorting by latest updated
-  const res = await fetch(`${baseApiUrl}/user/list-anime?page=1&per_page=${limit}&sort=updated_at&order=desc`, {
-    headers: { accept: "application/json" },
-  });
-  
-  if (!res.ok) {
-    throw new Error("Failed to fetch anime data");
+  try {
+    if (!baseApiUrl) {
+      console.log("API URL not available during build - returning empty RSS");
+      return [];
+    }
+    
+    // Fetch recent anime with sorting by latest updated
+    const res = await fetch(`${baseApiUrl}/user/list-anime?page=1&per_page=${limit}&sort=updated_at&order=desc`, {
+      headers: { accept: "application/json" },
+    });
+    
+    if (!res.ok) {
+      console.log("API not available during build - returning empty RSS");
+      return [];
+    }
+    
+    const data: ApiResponse = await res.json();
+    return data.data;
+  } catch (error) {
+    console.log("Error fetching anime for RSS during build - returning empty list");
+    return [];
   }
-  
-  const data: ApiResponse = await res.json();
-  return data.data;
 }
 
 export async function GET() {

@@ -9,16 +9,18 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Clock, FilmIcon, User, Home, Share2, Download, X, Maximize, Minimize, Volume2, VolumeX } from "lucide-react";
+import { Calendar, Clock, FilmIcon, User, Home, Share2, Download, X, Maximize, Minimize, Volume2, VolumeX, Bookmark, BookmarkCheck } from "lucide-react";
 import {Advertisement} from "@/components/adverstiment"
+import { isAuthenticated, getAuthHeader } from "@/lib/auth";
 import Head from "next/head";
 
 // Type definitions
 interface Episode {
-  Date: string;
-  Link: string;
-  Title: string;
-  Number: string;
+  url: string;
+  date: string;
+  title: string;
+  number: string;
+  video_url: string;
 }
 
 interface AnimeDetail {
@@ -72,6 +74,9 @@ export default function AnimeDetailPage() {
   const [lastWatchedEpisode, setLastWatchedEpisode] = useState<string | null>(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [isBookmarkLoading, setIsBookmarkLoading] = useState(false);
+  const [userBookmarks, setUserBookmarks] = useState<any[]>([]);
 
   useEffect(() => {
     // Detect language and region for targeted SEO
@@ -161,18 +166,18 @@ export default function AnimeDetailPage() {
       }
       if (e.key === 'ArrowRight' && isModalOpen && anime) {
         // Find and play next episode
-        const currentIndex = anime.episodes.findIndex(ep => ep.Link === currentVideo);
+        const currentIndex = anime.episodes.findIndex(ep => ep.video_url === currentVideo);
         if (currentIndex !== undefined && currentIndex < anime.episodes.length - 1) {
           const nextEpisode = anime.episodes[currentIndex + 1];
-          handleOpenModal(nextEpisode.Link, nextEpisode.Title);
+          handleOpenModal(nextEpisode.video_url, nextEpisode.title);
         }
       }
       if (e.key === 'ArrowLeft' && isModalOpen && anime) {
         // Find and play previous episode
-        const currentIndex = anime.episodes.findIndex(ep => ep.Link === currentVideo);
+        const currentIndex = anime.episodes.findIndex(ep => ep.video_url === currentVideo);
         if (currentIndex !== undefined && currentIndex > 0) {
           const prevEpisode = anime.episodes[currentIndex - 1];
-          handleOpenModal(prevEpisode.Link, prevEpisode.Title);
+          handleOpenModal(prevEpisode.video_url, prevEpisode.title);
         }
       }
       if (e.key === '?' && isModalOpen) {
@@ -194,6 +199,13 @@ export default function AnimeDetailPage() {
       window.removeEventListener('popstate', handlePopState);
     };
   }, [isModalOpen, currentVideo, anime]);
+
+  // Check bookmark status when anime is loaded
+  useEffect(() => {
+    if (anime) {
+      checkBookmarkStatus();
+    }
+  }, [anime]);
 
   const handleOpenModal = (videoUrl: string, episodeTitle: string) => {
     // Add autoplay parameter to the video URL
@@ -257,6 +269,110 @@ export default function AnimeDetailPage() {
         `Tonton ${anime.title} (${anime.released_year}) ${anime.type} secara gratis dengan kualitas terbaik! ${canonicalUrl}` : 
         canonicalUrl;
       window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
+    }
+  };
+
+  // Check if anime is bookmarked
+  const checkBookmarkStatus = async () => {
+    if (!isAuthenticated() || !anime) return;
+
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+      const authHeaders = getAuthHeader();
+
+      const response = await fetch(`${apiUrl}/user/bookmarks`, {
+        method: 'GET',
+        headers: {
+          'accept': 'application/json',
+          ...authHeaders,
+        },
+      });
+
+      if (response.ok) {
+        const bookmarks = await response.json();
+        setUserBookmarks(bookmarks);
+        setIsBookmarked(bookmarks.some((bookmark: any) => bookmark.content_id === anime.id));
+      }
+    } catch (error) {
+      console.error('Error checking bookmark status:', error);
+    }
+  };
+
+  // Add bookmark
+  const handleAddBookmark = async () => {
+    if (!isAuthenticated()) {
+      alert('Please login to bookmark this anime');
+      return;
+    }
+
+    if (!anime) return;
+
+    setIsBookmarkLoading(true);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+      const authHeaders = getAuthHeader();
+
+      const response = await fetch(`${apiUrl}/user/bookmarks`, {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'Content-Type': 'application/json',
+          ...authHeaders,
+        },
+        body: JSON.stringify({
+          content_id: anime.id,
+          url: canonicalUrl,
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setIsBookmarked(true);
+        alert('Anime berhasil ditambahkan ke bookmark!');
+      } else {
+        throw new Error('Failed to add bookmark');
+      }
+    } catch (error) {
+      console.error('Error adding bookmark:', error);
+      alert('Gagal menambahkan bookmark');
+    } finally {
+      setIsBookmarkLoading(false);
+    }
+  };
+
+  // Remove bookmark
+  const handleRemoveBookmark = async () => {
+    if (!isAuthenticated() || !anime) return;
+
+    setIsBookmarkLoading(true);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+      const authHeaders = getAuthHeader();
+
+      // Find the bookmark for this anime
+      const bookmark = userBookmarks.find((b: any) => b.content_id === anime.id);
+      if (!bookmark) return;
+
+      const response = await fetch(`${apiUrl}/user/bookmarks/${anime.id}`, {
+        method: 'DELETE',
+        headers: {
+          'accept': 'application/json',
+          ...authHeaders,
+        },
+      });
+
+      if (response.ok) {
+        setIsBookmarked(false);
+        setUserBookmarks(prev => prev.filter((b: any) => b.id !== bookmark.id));
+        alert('Anime berhasil dihapus dari bookmark!');
+      } else {
+        throw new Error('Failed to remove bookmark');
+      }
+    } catch (error) {
+      console.error('Error removing bookmark:', error);
+      alert('Gagal menghapus bookmark');
+    } finally {
+      setIsBookmarkLoading(false);
     }
   };
 
@@ -560,7 +676,7 @@ export default function AnimeDetailPage() {
                 </div>
               </div>
               
-              <div className="pt-4">
+              <div className="pt-4 space-y-3">
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -570,6 +686,46 @@ export default function AnimeDetailPage() {
                   <Share2 size={16} />
                   <span>Bagikan ke Teman</span>
                 </Button>
+                
+                {isAuthenticated() ? (
+                  <Button 
+                    variant={isBookmarked ? "default" : "outline"}
+                    size="sm" 
+                    className={`w-full flex items-center justify-center gap-2 ${
+                      isBookmarked 
+                        ? "bg-yellow-500 hover:bg-yellow-600 text-black" 
+                        : "border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black"
+                    }`}
+                    onClick={isBookmarked ? handleRemoveBookmark : handleAddBookmark}
+                    disabled={isBookmarkLoading}
+                  >
+                    {isBookmarkLoading ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                    ) : isBookmarked ? (
+                      <BookmarkCheck size={16} />
+                    ) : (
+                      <Bookmark size={16} />
+                    )}
+                    <span>
+                      {isBookmarkLoading 
+                        ? "Loading..." 
+                        : isBookmarked 
+                          ? "Hapus Bookmark" 
+                          : "Tambah Bookmark"
+                      }
+                    </span>
+                  </Button>
+                ) : (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full flex items-center justify-center gap-2 border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black"
+                    onClick={() => window.location.href = '/login'}
+                  >
+                    <Bookmark size={16} />
+                    <span>Login untuk Bookmark</span>
+                  </Button>
+                )}
               </div>
             </div>
           </div>
@@ -602,9 +758,9 @@ export default function AnimeDetailPage() {
                 <h2 className="text-xl font-semibold text-white">Daftar Episode</h2>
                 <ScrollArea className="h-[500px] pr-4">
                   <div className="space-y-3">
-                    {anime.episodes.map((episode) => (
+                    {anime.episodes.map((episode, index) => (
                       <EpisodeCard 
-                        key={episode.Number} 
+                        key={`${episode.number}-${index}`} 
                         episode={episode} 
                         onOpenModal={handleOpenModal} 
                         animeTitle={anime.title}
@@ -675,13 +831,13 @@ export default function AnimeDetailPage() {
                     <button 
                       className="text-white hover:text-gray-300 transition-colors"
                       onClick={() => {
-                        const currentIndex = anime?.episodes.findIndex(ep => ep.Link === currentVideo);
+                        const currentIndex = anime?.episodes.findIndex(ep => ep.video_url === currentVideo);
                         if (currentIndex !== undefined && currentIndex > 0) {
                           const prevEpisode = anime.episodes[currentIndex - 1];
-                          handleOpenModal(prevEpisode.Link, prevEpisode.Title);
+                          handleOpenModal(prevEpisode.video_url, prevEpisode.title);
                         }
                       }}
-                      disabled={anime?.episodes.findIndex(ep => ep.Link === currentVideo) === 0}
+                      disabled={anime?.episodes.findIndex(ep => ep.video_url === currentVideo) === 0}
                       aria-label="Previous episode"
                     >
                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -691,13 +847,13 @@ export default function AnimeDetailPage() {
                     <button 
                       className="text-white hover:text-gray-300 transition-colors"
                       onClick={() => {
-                        const currentIndex = anime?.episodes.findIndex(ep => ep.Link === currentVideo);
+                        const currentIndex = anime?.episodes.findIndex(ep => ep.video_url === currentVideo);
                         if (currentIndex !== undefined && currentIndex < anime.episodes.length - 1) {
                           const nextEpisode = anime.episodes[currentIndex + 1];
-                          handleOpenModal(nextEpisode.Link, nextEpisode.Title);
+                          handleOpenModal(nextEpisode.video_url, nextEpisode.title);
                         }
                       }}
-                      disabled={anime?.episodes.findIndex(ep => ep.Link === currentVideo) === anime.episodes.length - 1}
+                      disabled={anime?.episodes.findIndex(ep => ep.video_url === currentVideo) === anime.episodes.length - 1}
                       aria-label="Next episode"
                     >
                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -762,13 +918,13 @@ function EpisodeCard({
   animeTitle: string;
 }) {
   // Generate a URL for the episode (used for navigation history)
-  const episodeUrl = `/watch/${animeTitle.toLowerCase().replace(/\s+/g, '-')}-episode-${episode.Number}`;
+  const episodeUrl = `/watch/${animeTitle.toLowerCase().replace(/\s+/g, '-')}-episode-${episode.number}`;
   
   // Function to handle title click - now opens modal instead of navigating
   
   const handleTitleClick = (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent default navigation behavior
-    onOpenModal(episode.Link, episode.Title);
+    onOpenModal(episode.video_url, episode.title);
   };
   
   return (
@@ -781,17 +937,17 @@ function EpisodeCard({
             onClick={handleTitleClick}
             className="hover:text-gray-300 transition-colors cursor-pointer"
           >
-            {episode.Title}
+            {episode.title}
           </a>
         </h3>
-        <time dateTime={episode.Date} className="text-sm text-gray-400">{episode.Date}</time>
+        <time dateTime={episode.date} className="text-sm text-gray-400">{episode.date}</time>
       </div>
       <div className="mt-4 flex gap-3">
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={() => onOpenModal(episode.Link, episode.Title)}
-          aria-label={`Tonton ${episode.Title} subtitle Indonesia`}
+          onClick={() => onOpenModal(episode.video_url, episode.title)}
+          aria-label={`Tonton ${episode.title} subtitle Indonesia`}
         >
           Tonton Episode
         </Button>

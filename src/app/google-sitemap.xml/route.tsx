@@ -43,44 +43,55 @@ async function fetchAllAnime(): Promise<AnimeData[]> {
   let allAnime: AnimeData[] = [];
   let totalAnime = 0;
   
-  // First request to get total count
-  const initialRes = await fetch(`${baseApiUrl}/user/list-anime?page=1&per_page=${perPage}`, {
-    headers: { accept: "application/json" },
-  });
-  
-  if (!initialRes.ok) {
-    throw new Error("Failed to fetch anime data");
-  }
-  
-  const initialData: ApiResponse = await initialRes.json();
-  totalAnime = initialData.total;
-  allAnime = [...initialData.data];
-  
-  // Calculate total pages needed
-  const totalPages = Math.ceil(totalAnime / perPage);
-  
-  // Fetch remaining pages
-  const remainingRequests = [];
-  for (let i = 2; i <= totalPages; i++) {
-    remainingRequests.push(
-      fetch(`${baseApiUrl}/user/list-anime?page=${i}&per_page=${perPage}`, {
-        headers: { accept: "application/json" },
-      }).then(res => {
-        if (!res.ok) throw new Error(`Failed to fetch page ${i}`);
-        return res.json();
-      }).then((data: ApiResponse) => data.data)
-    );
-  }
-  
-  // Wait for all requests to complete
-  if (remainingRequests.length > 0) {
-    const remainingData = await Promise.all(remainingRequests);
-    remainingData.forEach(pageData => {
-      allAnime = [...allAnime, ...pageData];
+  try {
+    if (!baseApiUrl) {
+      console.log("API URL not available during build - returning empty anime list");
+      return [];
+    }
+    
+    // First request to get total count
+    const initialRes = await fetch(`${baseApiUrl}/user/list-anime?page=1&per_page=${perPage}`, {
+      headers: { accept: "application/json" },
     });
+    
+    if (!initialRes.ok) {
+      console.log("API not available during build - returning empty anime list");
+      return [];
+    }
+    
+    const initialData: ApiResponse = await initialRes.json();
+    totalAnime = initialData.total;
+    allAnime = [...initialData.data];
+    
+    // Calculate total pages needed
+    const totalPages = Math.ceil(totalAnime / perPage);
+    
+    // Fetch remaining pages
+    const remainingRequests = [];
+    for (let i = 2; i <= totalPages; i++) {
+      remainingRequests.push(
+        fetch(`${baseApiUrl}/user/list-anime?page=${i}&per_page=${perPage}`, {
+          headers: { accept: "application/json" },
+        }).then(res => {
+          if (!res.ok) throw new Error(`Failed to fetch page ${i}`);
+          return res.json();
+        }).then((data: ApiResponse) => data.data)
+      );
+    }
+    
+    // Wait for all requests to complete
+    if (remainingRequests.length > 0) {
+      const remainingData = await Promise.all(remainingRequests);
+      remainingData.forEach(pageData => {
+        allAnime = [...allAnime, ...pageData];
+      });
+    }
+    
+    return allAnime;
+  } catch (error) {
+    console.log("Error fetching anime for sitemap during build - returning empty list");
+    return [];
   }
-  
-  return allAnime;
 }
 
 export async function GET() {
