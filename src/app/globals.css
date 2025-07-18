@@ -142,3 +142,12 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
 }
+
+/* Floating animation for 404 anime image */
+.animate-float {
+  animation: floatY 2.5s ease-in-out infinite;
+}
+@keyframes floatY {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-24px); }
+}
