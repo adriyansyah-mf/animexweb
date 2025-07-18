@@ -15,7 +15,7 @@ export function Advertisement({ containerId }: AdvertisementProps) {
       const script = document.createElement("script");
       script.async = true;
       script.dataset.cfasync = "false";
-      script.src = "//pl26466628.profitableratecpm.com/714e78d4b3b17786d5fca92c3e416b2f/invoke.js";
+      script.src = "//nightmarenomad.com/73/f7/42/73f74251b76cfef75e40d7170682a969.js";
       
       if (adContainerRef.current && adContainerRef.current.parentNode) {
         adContainerRef.current.parentNode.insertBefore(script, adContainerRef.current);
