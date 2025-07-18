@@ -732,6 +732,7 @@ export default function AnimeDetailPage() {
               <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: generateJsonLd() }} />
               <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: generateWebsiteJsonLd() }} />
               <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: generateBreadcrumbJsonLd() }} />
+              <Advertisement />
               <title>{anime.title}</title>
               <div className="mb-4">
                 <h2 className="sr-only">Judul Alternatif</h2>
