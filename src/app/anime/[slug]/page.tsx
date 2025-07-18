@@ -558,47 +558,9 @@ export default function AnimeDetailPage() {
 
   return (
     <>
-      <Head>
-        <title>{animeTitleForMeta}</title>
-        <meta name="description" content={metaDescription} />
-        <meta name="keywords" content={enhancedKeywords} />
-        <link rel="canonical" href={canonicalUrl} />
-        
-        <meta httpEquiv="content-language" content="id-ID" />
-        <link rel="alternate" href={canonicalUrl} hrefLang="id-ID" />
-        <link rel="alternate" href={canonicalUrl} hrefLang="x-default" />
-        
-        <meta property="og:type" content="video.tv_show" />
-        <meta property="og:title" content={animeTitleForMeta} />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:image" content={anime.banner} />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:site_name" content={siteSettings.site_name} />
-        <meta property="og:locale" content="id_ID" />
-        
-        <meta name="twitter:title" content={animeTitleForMeta} />
-        <meta name="twitter:description" content={metaDescription} />
-        <meta name="twitter:image" content={anime.banner} />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@yoursitename" />
 
-        
-        <meta name="robots" content={`${siteSettings.meta_robots || "index, follow"}, max-image-preview:large`} />
-        <meta name="author" content={siteSettings.site_author} />
-        <meta name="language" content="id" />
-        <meta name="geo.country" content="ID" />
-        <meta name="geo.placename" content="Indonesia" />
-        <meta name="distribution" content="Indonesia" />
-        <meta name="revisit-after" content="1 day" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="theme-color" content="#000000" />
-        
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: generateJsonLd() }} />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: generateWebsiteJsonLd() }} />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: generateBreadcrumbJsonLd() }} />
-      </Head>
-
+      <Advertisement />
+      <h1 className="text-3xl font-bold text-white mb-4">{anime.title}</h1>
       <div className="container mx-auto py-6 px-4 md:px-6 mt-20">
         <nav aria-label="Breadcrumb" className="mb-6">
           <ol className="flex items-center space-x-2 text-sm text-gray-400">
@@ -726,19 +688,57 @@ export default function AnimeDetailPage() {
                     <span>Login untuk Bookmark</span>
                   </Button>
                 )}
+                <Advertisement />
               </div>
             </div>
           </div>
 
           <div className="md:col-span-2">
             <header>
-              <h1 className="text-3xl md:text-4xl font-bold text-white mb-4" id="anime-title">{anime.title}</h1>
+              <meta name="description" content={metaDescription} />
+              <meta name="keywords" content={enhancedKeywords} />
+              <link rel="canonical" href={canonicalUrl} />
+              
+              <meta httpEquiv="content-language" content="id-ID" />
+              <link rel="alternate" href={canonicalUrl} hrefLang="id-ID" />
+              <link rel="alternate" href={canonicalUrl} hrefLang="x-default" />
+              
+              <meta property="og:type" content="video.tv_show" />
+              <meta property="og:title" content={animeTitleForMeta} />
+              <meta property="og:description" content={metaDescription} />
+              <meta property="og:image" content={anime.banner} />
+              <meta property="og:url" content={canonicalUrl} />
+              <meta property="og:site_name" content={siteSettings.site_name} />
+              <meta property="og:locale" content="id_ID" />
+              
+              <meta name="twitter:title" content={animeTitleForMeta} />
+              <meta name="twitter:description" content={metaDescription} />
+              <meta name="twitter:image" content={anime.banner} />
+              <meta name="twitter:card" content="summary_large_image" />
+              <meta name="twitter:site" content="@yoursitename" />
+
+              
+              <meta name="robots" content={`${siteSettings.meta_robots || "index, follow"}, max-image-preview:large`} />
+              <meta name="author" content={siteSettings.site_author} />
+              <meta name="language" content="id" />
+              <meta name="geo.country" content="ID" />
+              <meta name="geo.placename" content="Indonesia" />
+              <meta name="distribution" content="Indonesia" />
+              <meta name="revisit-after" content="1 day" />
+              <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+              <meta name="mobile-web-app-capable" content="yes" />
+              <meta name="theme-color" content="#000000" />
+              
+              <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: generateJsonLd() }} />
+              <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: generateWebsiteJsonLd() }} />
+              <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: generateBreadcrumbJsonLd() }} />
+              <title>{anime.title}</title>
               <div className="mb-4">
                 <h2 className="sr-only">Judul Alternatif</h2>
                 <p className="text-gray-300 text-sm">{anime.title} Sub Indo</p>
               </div>
             </header>
-
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-4 mt-5" id="anime-title">{anime.title}</h1>
             <section className="mb-6 mt-4">
               <h2 className="text-xl font-semibold text-white mb-2">Sinopsis</h2>
               <p className="text-gray-300">{anime.sinopsis}</p>
