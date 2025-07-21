@@ -87,6 +87,17 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen flex items-center justify-center px-4 py-12 mt-20">
+      <header>
+      <title>Login Page | OtakuStream</title>
+      <meta name="description" content="Login to your account to access your bookmarks and more features." />
+      <meta name="robots" content="index, follow" />
+      <meta name="author" content="OtakuStream" />
+      <meta name="language" content="id" />
+      <meta name="geo.country" content="ID" />
+      <meta name="geo.placename" content="Indonesia" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+      </header>
       <div className="w-full max-w-md">
         <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-lg shadow-xl p-8">
           <div className="text-center mb-8">

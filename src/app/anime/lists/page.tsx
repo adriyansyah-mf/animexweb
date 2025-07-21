@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import GlassmorphismNavbar from "@/components/ui/navbar";
 
+
 // Fade-in animation variants
 const fadeInUp = {
   hidden: { opacity: 0, y: 40 },
@@ -123,9 +124,26 @@ const BrowseAnime = () => {
 
   return (
     <>
+      <header>
+        <title>Anime Lists - Otakustream</title>
+        <meta name="description" content="Daftar anime terbaru dan terpopuler di Otakustream." />
+        <meta name="robots" content="index, follow" />
+        <meta name="author" content="OtakuStream" />
+        <meta name="language" content="id" />
+        <meta name="geo.country" content="ID" />
+        <meta name="geo.placename" content="Indonesia" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="theme-color" content="#2F88FF" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Otakustream" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Otakustream" />
+      </header>
       <GlassmorphismNavbar navItems={[]} onSearch={(q) => setSearch(q)} />
 
-      <div className="container mx-auto py-10 px-4">
+      <div className="container mx-auto py-10 px-4 mt-20">
         {/* Filters Section */}
         <div className="flex gap-4 mb-6">
           {/* Genre Filter */}

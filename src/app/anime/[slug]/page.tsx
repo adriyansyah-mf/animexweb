@@ -736,7 +736,7 @@ export default function AnimeDetailPage() {
               <title>{anime.title}</title>
               <div className="mb-4">
                 <h2 className="sr-only">Judul Alternatif</h2>
-                <p className="text-gray-300 text-sm">{anime.title} Sub Indo</p>
+                <h1 className="text-gray-300 text-sm">{anime.title} Sub Indo</h1>
               </div>
             </header>
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-4 mt-5" id="anime-title">{anime.title}</h1>

@@ -54,6 +54,15 @@ export default async function PrivacyPolicyPage() {
 
   return (
     <main className="max-w-3xl mx-auto px-4 py-10 mt-40">
+      <header>
+        <title>Kebijakan Privasi - OtakuStream</title>
+        <meta name="description" content="Kebijakan Privasi situs OtakuStream. Ketahui bagaimana data Anda dikumpulkan, digunakan, dan dilindungi." />
+        <meta name="robots" content="index, follow" />
+        <meta name="author" content="OtakuStream" />
+        <meta name="language" content="id" />
+        <meta name="geo.country" content="ID" />
+        <meta name="geo.placename" content="Indonesia" />
+      </header>
       <h1 className="text-3xl font-bold mb-6">Kebijakan Privasi</h1>
 
       <p className="mb-4">

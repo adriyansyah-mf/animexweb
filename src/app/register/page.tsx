@@ -61,6 +61,15 @@ export default function RegisterPage() {
 
   return (
     <main className="min-h-screen flex items-center justify-center px-4 py-12 mt-20">
+      <header>
+        <title>Register Page | OtakuStream</title>
+        <meta name="description" content="Register to start watching anime." />
+        <meta name="robots" content="index, follow" />
+        <meta name="author" content="OtakuStream" />
+        <meta name="language" content="id" />
+        <meta name="geo.country" content="ID" />
+        <meta name="geo.placename" content="Indonesia" />
+      </header>
       <div className="w-full max-w-md">
         <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-lg shadow-xl p-8">
           <div className="text-center mb-8">

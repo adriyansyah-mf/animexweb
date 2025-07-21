@@ -55,6 +55,15 @@ export default async function TermsPage() {
 
   return (
     <main className="max-w-3xl mx-auto px-4 py-10 mt-40">
+      <header>
+        <title>Syarat & Ketentuan - OtakuStream</title>
+        <meta name="description" content="Syarat & Ketentuan penggunaan layanan OtakuStream. Harap baca dengan seksama sebelum menggunakan layanan." />
+        <meta name="robots" content="index, follow" />
+        <meta name="author" content="OtakuStream" />
+        <meta name="language" content="id" />
+        <meta name="geo.country" content="ID" />
+        <meta name="geo.placename" content="Indonesia" />
+      </header>
       <h1 className="text-3xl font-bold mb-6">Syarat & Ketentuan</h1>
 
       <p className="mb-4">
